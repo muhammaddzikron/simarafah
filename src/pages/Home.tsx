@@ -23,7 +23,7 @@ const getAI = () => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
   try {
-    return new GoogleGenAI(apiKey);
+    return new GoogleGenAI({ apiKey });
   } catch (e) {
     console.error("Failed to initialize Gemini AI:", e);
     return null;
@@ -223,9 +223,11 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
       setIsTranslating(true);
       try {
         if (!ai) throw new Error("AI not initialized (missing API key)");
-        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const response = await model.generateContent(`Terjemahkan teks berikut dari Bahasa ${sourceLang} ke Bahasa ${targetLang}. Cukup berikan hasil terjemahannya saja tanpa penjelasan tambahan: "${transInput}"`);
-        setTransOutput(response.response.text());
+        const response = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: `Terjemahkan teks berikut dari Bahasa ${sourceLang} ke Bahasa ${targetLang}. Cukup berikan hasil terjemahannya saja tanpa penjelasan tambahan: "${transInput}"`,
+        });
+        setTransOutput(response.text || '');
       } catch (error) {
         console.error('Translation error:', error);
       } finally {

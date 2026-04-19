@@ -273,7 +273,6 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
           error: (err: any) => reject(err)
         });
       });
-    }
 
     // 2. Fallback to Firestore if Spreadsheet fail
     const docRef = doc(db, 'settings', 'jemaah_data');
