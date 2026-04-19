@@ -19,7 +19,16 @@ import { Phone } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const getAI = () => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+  try {
+    return new GoogleGenAI(apiKey);
+  } catch (e) {
+    console.error("Failed to initialize Gemini AI:", e);
+    return null;
+  }
+};
 
 const menuItems = [
   { emoji: '🕋', label: 'Profil KBIHU', id: 'profil' },
@@ -50,6 +59,7 @@ const prayerTimesSaudi = [
 
 export default function Home({ user, onLogout }: { user: User | null, onLogout?: () => void }) {
   const navigate = useNavigate();
+  const ai = useMemo(() => getAI(), []);
   const [content, setContent] = useState<AdminContent | null>(null);
   const [jemaah, setJemaah] = useState<Jemaah[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -212,11 +222,10 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
     const timeoutId = setTimeout(async () => {
       setIsTranslating(true);
       try {
-        const response = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: `Terjemahkan teks berikut dari Bahasa ${sourceLang} ke Bahasa ${targetLang}. Cukup berikan hasil terjemahannya saja tanpa penjelasan tambahan: "${transInput}"`,
-        });
-        setTransOutput(response.text || '');
+        if (!ai) throw new Error("AI not initialized (missing API key)");
+        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const response = await model.generateContent(`Terjemahkan teks berikut dari Bahasa ${sourceLang} ke Bahasa ${targetLang}. Cukup berikan hasil terjemahannya saja tanpa penjelasan tambahan: "${transInput}"`);
+        setTransOutput(response.response.text());
       } catch (error) {
         console.error('Translation error:', error);
       } finally {
