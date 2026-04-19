@@ -125,8 +125,10 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
   try {
     // 1. Try Spreadsheet first (Master Data) with cache buster
     const response = await fetch(`${SPREADSHEET_URL}&t=${Date.now()}`, { cache: 'no-store' });
-    if (response.ok) {
-      const text = await response.text();
+    if (!response.ok) {
+      throw new Error(`Gagal mengambil data dari Spreadsheet (HTTP ${response.status}). Pastikan Spreadsheet sudah di-set "Anyone with the link can view".`);
+    }
+    const text = await response.text();
       return new Promise((resolve, reject) => {
         Papa.parse(text, {
           header: false, // Use indices for accuracy
@@ -507,12 +509,18 @@ export async function login(username: string, passwordOrPorsi: string): Promise<
   const uName = cleanInput(username);
   const pwOrPorsi = cleanInput(passwordOrPorsi);
 
-  // If already signed in, we might want to sign out or just use the current session
-  // For simplicity, we ensure a Firebase Auth session if valid custom credentials found
-  
+  // Ensure Firebase Auth session exists before any Firestore calls
+  if (!auth.currentUser) {
+    try {
+      await signInAnonymously(auth);
+    } catch (e) {
+      console.error("Anonymous auth failed:", e);
+      // We continue because spreadsheet-based login might still work if it doesn't hit Firestore fallback
+    }
+  }
+
   // Priority check for the newly requested admin password
   if (uName === 'admin' && pwOrPorsi === 'adnimku') {
-    if (!auth.currentUser) await signInAnonymously(auth);
     return { id: 'admin-admin', username: 'admin', nama: 'Super Admin', role: 'super_admin' };
   }
 
@@ -557,7 +565,6 @@ export async function login(username: string, passwordOrPorsi: string): Promise<
   });
 
   if (jemaah) {
-    if (!auth.currentUser) await signInAnonymously(auth);
     return { 
       id: jemaah.no, 
       username: jemaah.namaLengkap, 

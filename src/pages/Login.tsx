@@ -44,8 +44,15 @@ export default function Login({ onLogin }: { onLogin: (user: User) => void }) {
       } else {
         setError('Data tidak ditemukan. Silakan cek kembali Nomor Porsi/Username anda.');
       }
-    } catch (err) {
-      setError('Terjadi kesalahan koneksi.');
+    } catch (err: any) {
+      console.error('Login error details:', err);
+      if (err.message && err.message.includes('auth/operation-not-allowed')) {
+        setError('Fitur Login belum diaktifkan di Firebase Console. Silakan aktifkan "Anonymous Auth".');
+      } else if (err.message && (err.message.includes('fetch') || err.message.includes('network'))) {
+        setError('Gangguan koneksi ke server data. Pastikan internet anda stabil.');
+      } else {
+        setError('Terjadi kesalahan koneksi: ' + (err.message || 'Unknown Error'));
+      }
     } finally {
       setLoading(false);
     }
