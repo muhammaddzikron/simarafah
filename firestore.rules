@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+
+    // 3. Validation Blueprints
+    
+    function isValidChecklist(data) {
+      return data.porsi is string && data.porsi.size() <= 50 &&
+             data.checkedItems is map &&
+             data.updatedAt is timestamp;
+    }
+    
+    function isValidAdminContent(data) {
+      return (data.profil is string && data.profil.size() <= 5000) ||
+             (data.updatedAt is timestamp);
+    }
+    
+    function isValidRegistration(data) {
+      return data.nomorPorsi is string && data.nomorPorsi.size() <= 20 &&
+             data.namaLengkap is string && data.namaLengkap.size() <= 200 &&
+             data.wa is string && data.wa.size() <= 20 &&
+             data.status is string && data.status.size() <= 50 &&
+             data.createdAt == request.time;
+    }
+
+    // 4. Collection Rules
+    
+    // settings collection
+    match /settings/{docId} {
+      allow get: if isSignedIn() && isValidId(docId);
+      allow list: if false; // No listing settings
+      
+      allow write: if isSignedIn() && (
+        (docId == 'admin_content' && isValidAdminContent(incoming())) ||
+        (docId == 'admin_users' && incoming().users is list) ||
+        (docId == 'jemaah_data' && incoming().jemaah is list)
+      );
+    }
+
+    // checklists collection
+    match /checklists/{porsi} {
+      allow get: if isSignedIn() && isValidId(porsi);
+      allow write: if isSignedIn() && isValidId(porsi) && isValidChecklist(incoming());
+      allow list: if false;
+    }
+
+    // registrations collection
+    match /registrations/{regId} {
+      allow create: if isValidId(regId) && isValidRegistration(incoming());
+      allow get, list, update, delete: if isSignedIn() && isValidId(regId);
+      
+      allow update: if isSignedIn() && (
+        // Action: Update status
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+        incoming().status is string && incoming().updatedAt == request.time
+      );
+    }
+
+    // test collection for connection verification
+    match /test/connection {
+      allow get: if true;
+    }
+  }
+}

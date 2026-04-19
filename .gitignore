@@ -1,0 +1,22 @@
+node_modules/
+build/
+dist/
+dist-ssr/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+package-lock.json
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Firebase
+.firebase/
+firestore-debug.log
+ui-debug.log
+firebase-debug.log

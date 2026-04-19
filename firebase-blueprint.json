@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "Checklist": {
+      "title": "User Checklist",
+      "description": "Stores completion state of items for a specific jemaah.",
+      "type": "object",
+      "properties": {
+        "porsi": { "type": "string", "description": "Nomor porsi jemaah" },
+        "checkedItems": { "type": "object", "description": "Map of item identifiers to boolean completion status" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["porsi", "checkedItems", "updatedAt"]
+    },
+    "AdminContent": {
+      "title": "Admin Configuration",
+      "description": "Stores general app content managed by admins.",
+      "type": "object",
+      "properties": {
+        "profil": { "type": "string" },
+        "pengumuman": { "type": "string" },
+        "sosmed": { "type": "object" },
+        "kontak": { "type": "object" },
+        "agenda": { "type": "array" },
+        "perlengkapan": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Registration": {
+      "title": "Jemaah Registration",
+      "description": "Information provided by new jemaah during registration.",
+      "type": "object",
+      "properties": {
+        "nomorPorsi": { "type": "string" },
+        "namaLengkap": { "type": "string" },
+        "wa": { "type": "string" },
+        "status": { "type": "string" },
+        "photos": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["nomorPorsi", "namaLengkap", "wa", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/checklists/{porsi}": {
+      "schema": "Checklist",
+      "description": "User specific checklist data"
+    },
+    "/settings/admin_content": {
+      "schema": "AdminContent",
+      "description": "Global application content configuration"
+    },
+    "/settings/admin_users": {
+      "schema": "object",
+      "description": "Management of administrative users"
+    },
+    "/settings/jemaah_data": {
+      "schema": "object",
+      "description": "Master sync data for jemaah from Spreadsheet"
+    },
+    "/registrations/{regId}": {
+      "schema": "Registration",
+      "description": "Pending registrations from new jemaah"
+    }
+  }
+}

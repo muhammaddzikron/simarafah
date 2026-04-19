@@ -1,11 +1,33 @@
-<div align="center">
+# SIM ARAFAH Muhammadiyah Klaten
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Sistem Informasi Manajemen KBIHU Arafah Muhammadiyah Klaten. 
+Aplikasi ini dirancang untuk memudahkan manajemen data jemaah haji, pendaftaran baru, dan penyebaran konten bimbingan haji.
 
-  <h1>Built with AI Studio</h2>
+## Fitur Utama
+- **Dashboard Admin**: Manajemen data jemaah (Sinkronisasi Google Sheets).
+- **Pendaftaran Mandiri**: Jemaah baru dapat mendaftar dan mengunggah dokumen (KTP, SPPH, Pas Foto).
+- **Dasbor Jemaah**: Ceklist perbekalan, materi bimbingan (video/artikel), dan info jadwal.
+- **Translate & AI**: Fitur terjemahan dan bantuan informasi berbasis AI.
+- **Optimasi Firestore**: Implementasi debounce dan manajemen kuota tulis harian.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## Teknologi
+- **Frontend**: React (Vite) + Tailwind CSS + Framer Motion.
+- **Backend/Database**: Firebase (Firestore & Auth).
+- **Spreadsheet Sync**: Integrasi Google Sheets API via PapaParse.
+- **Icons**: Lucide React.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Cara Sinkronisasi GitHub dari AI Studio
+Untuk sinkronisasi berkala dari lingkungan Build AI Studio ke repositori GitHub:
+1. Klik ikon **Settings** (roda gigi) di pojok kiri bawah AI Studio.
+2. Pilih menu **"Export to GitHub"**.
+3. Hubungkan akun GitHub Anda dan pilih repositori yang diinginkan.
+4. Klik **"Push to GitHub"** setiap kali Anda selesai melakukan perubahan di sini.
 
-</div>
+## Pengembangan Lokal
+1. Clone repositori ini.
+2. Jalankan `npm install`.
+3. Buat file `.env` berdasarkan `.env.example`.
+4. Jalankan `npm run dev`.
+
+---
+© 2026 KBIHU Arafah Muhammadiyah Klaten.

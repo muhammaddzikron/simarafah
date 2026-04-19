@@ -1,0 +1,8 @@
+{
+  "name": "SIM ARAFAH V3",
+  "description": "Sistem Informasi Manajemen KBIHU Arafah Muhammadiyah Klaten",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": []
+}
