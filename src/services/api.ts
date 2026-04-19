@@ -124,14 +124,16 @@ export const defaultAdminUsers = [
 export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]> {
   try {
     // 1. Try Spreadsheet first (Master Data) with cache buster
-    const response = await fetch(`${SPREADSHEET_URL}&t=${Date.now()}`, { cache: 'no-store' });
-    if (!response.ok) {
-      throw new Error(`Gagal mengambil data dari Spreadsheet (HTTP ${response.status}). Pastikan Spreadsheet sudah di-set "Anyone with the link can view".`);
-    }
-    const text = await response.text();
-      return new Promise((resolve, reject) => {
+    const response = await fetch(`${SPREADSHEET_URL}&t=${Date.now()}`, { cache: 'no-store' }).catch(e => {
+        console.warn("Spreadsheet fetch network error:", e);
+        return null;
+    });
+
+    if (response && response.ok) {
+      const text = await response.text();
+      const jemaahList = await new Promise<Jemaah[]>((resolve, reject) => {
         Papa.parse(text, {
-          header: false, // Use indices for accuracy
+          header: false,
           skipEmptyLines: true,
           complete: (results) => {
             const data = results.data as any[];
@@ -140,11 +142,10 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
               return;
             }
             
-            // Find header row
+            // ... (keep all the indexing logic)
             let hIdx = -1;
             for(let i=0; i<Math.min(data.length, 15); i++) {
                 const rowStr = JSON.stringify(data[i]).toLowerCase();
-                // Check if row contains key identifiers
                 if ((rowStr.includes('nama') || rowStr.includes('lengkap')) && (rowStr.includes('porsi') || rowStr.includes('kloter') || rowStr.includes('no'))) {
                     hIdx = i;
                     break;
@@ -154,16 +155,11 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
             const headerRow = hIdx !== -1 ? data[hIdx].map((h: any) => String(h || '').toLowerCase().trim()) : [];
             const findC = (keys: string[], def: number) => {
               if (hIdx === -1) return def;
-              
               const lowerKeys = keys.map(k => k.toLowerCase());
-              
-              // 1. Priority 1: Exact Match
               for (const k of lowerKeys) {
                 const exactIdx = headerRow.findIndex(h => h === k);
                 if (exactIdx !== -1) return exactIdx;
               }
-
-              // 2. Priority 2: Precise Partial Match (Avoid confusion)
               const preciseIdx = headerRow.findIndex(h => {
                 return lowerKeys.some(k => {
                   if (k === 'nama' && (h.includes('ketua') || h.includes('karom') || h.includes('pendamping'))) return false;
@@ -173,21 +169,19 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
                 });
               });
               if (preciseIdx !== -1) return preciseIdx;
-
-              // 3. Fallback: Any Match
               const anyIdx = headerRow.findIndex(h => lowerKeys.some(k => h.includes(k)));
               return anyIdx !== -1 ? anyIdx : def;
             };
 
             const idx = {
-              nama: findC(['nama lengkap', 'jemaah', 'nama'], 8), // Column I
-              porsi: findC(['nomor porsi', 'porsi hq', 'porsi'], 5), // Column F (index 5)
+              nama: findC(['nama lengkap', 'jemaah', 'nama'], 8), 
+              porsi: findC(['nomor porsi', 'porsi hq', 'porsi'], 5), 
               kloter: findC(['kloter'], 1),
               romb: findC(['rombongan'], 2),
               asrama: findC(['asrama', 'masuk'], 3),
               karom: findC(['ketua rombongan', 'karom', 'ketua'], 4),
-              waKarom: findC(['wa karom', 'wa ketua'], 28), // AC
-              waPetugas: findC(['wa petugas', 'admin', 'petugas'], 29), // AD
+              waKarom: findC(['wa karom', 'wa ketua'], 28), 
+              waPetugas: findC(['wa petugas', 'admin', 'petugas'], 29), 
               umur: findC(['umur'], 9),
               jk: findC(['jenis kelamin', 'jk'], 10),
               alamat: findC(['alamat'], 11),
@@ -195,8 +189,8 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
               kec: findC(['kecamatan'], 13),
               kab: findC(['kabupaten'], 14),
               wa: findC(['wa jemaah', 'whatsapp jemaah', 'nomor wa', 'wa'], 15),
-              hotel: findC(['hotel mekah'], 31), // AF
-              peta: findC(['link peta', 'peta hotel'], 32), // AG
+              hotel: findC(['hotel mekah'], 31), 
+              peta: findC(['link peta', 'peta hotel'], 32), 
               tanazul: findC(['tanazul'], 16),
               murur: findC(['murur'], 17),
               nafar: findC(['nafar'], 18),
@@ -205,17 +199,16 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
               badal: findC(['badal'], 21),
               roda: findC(['kursi roda', 'roda'], 22),
               tongkat: findC(['tongkat', 'kruk'], 23),
-              penTubuh: findC(['pen tubuh', 'pen'], 24), // Y
-              ringJantung: findC(['ring jantung', 'ring'], 25), // Z
-              pendamping: findC(['pendamping lansia', 'pendamping'], 26), // AA
-              waPendamping: findC(['wa pendamping'], 27), // AB
-              paspor: findC(['paspor'], 6), // G
-              visa: findC(['visa'], 7) // H
+              penTubuh: findC(['pen tubuh', 'pen'], 24), 
+              ringJantung: findC(['ring jantung', 'ring'], 25), 
+              pendamping: findC(['pendamping lansia', 'pendamping'], 26), 
+              waPendamping: findC(['wa pendamping'], 27), 
+              paspor: findC(['paspor'], 6), 
+              visa: findC(['visa'], 7) 
             };
 
             const startRow = hIdx !== -1 ? hIdx + 1 : 0; 
             const rows = data.slice(startRow);
-            
             const jemaahList: Jemaah[] = rows
               .filter(row => {
                 const name = row[idx.nama] ? String(row[idx.nama]).trim() : '';
@@ -260,29 +253,32 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
                   visa: g(idx.visa)
                 };
               });
-            
-            // Only background sync to Firestore if explicitly requested (e.g. from Admin Dashboard)
-            if (shouldSync) {
-              saveJemaah(jemaahList).catch(console.error);
-            } else {
-              // Just cache locally
-              saveStorage('jemaah_data', jemaahList);
-            }
             resolve(jemaahList);
           },
           error: (err: any) => reject(err)
         });
       });
 
+      if (shouldSync && jemaahList.length > 0) {
+        saveJemaah(jemaahList).catch(console.error);
+      } else {
+        saveStorage('jemaah_data', jemaahList);
+      }
+      return jemaahList;
+    }
+
     // 2. Fallback to Firestore if Spreadsheet fail
     const docRef = doc(db, 'settings', 'jemaah_data');
-    const docSnap = await getDoc(docRef).catch(e => handleFirestoreError(e, 'get', 'settings/jemaah_data'));
-    if (docSnap.exists()) {
+    const docSnap = await getDoc(docRef).catch(e => {
+        console.warn("Firestore jemaah_data fetch failed:", e);
+        return null;
+    });
+    if (docSnap && docSnap.exists()) {
       return docSnap.data().jemaah || [];
     }
     return getStorage('jemaah_data', defaultJemaah);
   } catch (error) {
-    console.warn('Sync failed, using cached/mock data:', error);
+    console.error('fetchJemaah overall failure:', error);
     return getStorage('jemaah_data', defaultJemaah);
   }
 }
@@ -302,115 +298,101 @@ export async function saveJemaah(jemaah: Jemaah[]) {
 
 export async function getAdminContent(): Promise<AdminContent> {
   try {
-    // 1. Try Firestore first for the most recent admin edits
+    // 1. Try Firestore first
     const docRef = doc(db, 'settings', 'admin_content');
-    const docSnap = await getDoc(docRef).catch(e => handleFirestoreError(e, 'get', 'settings/admin_content'));
+    const docSnap = await getDoc(docRef).catch(e => {
+        console.warn("Firestore admin_content fetch failed:", e);
+        return null;
+    });
     
-    if (docSnap.exists()) {
+    if (docSnap && docSnap.exists()) {
       return docSnap.data() as AdminContent;
     }
 
-    // 2. Fallback to Spreadsheet if Firestore is empty (Initial Seed)
-    const response = await fetch(SPREADSHEET_CONTENT_URL);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const text = await response.text();
+    // 2. Fallback to Spreadsheet
+    const response = await fetch(`${SPREADSHEET_CONTENT_URL}&t=${Date.now()}`).catch(e => {
+        console.warn("Spreadsheet content fetch error:", e);
+        return null;
+    });
     
-    return new Promise((resolve) => {
-      Papa.parse(text, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          const rows = results.data as any[];
-          if (rows.length === 0) {
-            resolve(getStorage('admin_content', defaultAdminContent));
-            return;
-          }
-
-          const content: AdminContent = {
-            profil: '',
-            galeri: [],
-            agenda: [],
-            materi: [],
-            sosmed: { ig: '', tiktok: '', yt: '' },
-            kontak: { wa1: '', wa2: '', alamat: '', peta: '' },
-            pengumuman: '',
-            perlengkapan: [],
-            pembayaran: [],
-            kontakPetugas: []
-          };
-
-          // Grouping rows by type
-          rows.forEach(row => {
-            const getV = (keys: string[]) => {
-              for (const k of keys) {
-                if (row[k] || row[k.toUpperCase()]) return String(row[k] || row[k.toUpperCase()]).trim();
-              }
-              return '';
+    if (response && response.ok) {
+      const text = await response.text();
+      return new Promise((resolve) => {
+        Papa.parse(text, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            const rows = results.data as any[];
+            if (rows.length === 0) {
+              resolve(getStorage('admin_content', defaultAdminContent));
+              return;
+            }
+            // ... (keep mapping logic)
+            const content: AdminContent = {
+              profil: '', galeri: [], agenda: [], materi: [],
+              sosmed: { ig: '', tiktok: '', yt: '' },
+              kontak: { wa1: '', wa2: '', alamat: '', peta: '' },
+              pengumuman: '', perlengkapan: [], pembayaran: [], kontakPetugas: []
             };
 
-            const type = getV(['TIPE', 'KEY', 'KATEGORI', 'JENIS']).toUpperCase();
-            
-            if (type === 'PROFIL') content.profil = getV(['ISI', 'VALUE', 'KONTEN']);
-            if (type === 'PENGUMUMAN') content.pengumuman = getV(['ISI', 'VALUE', 'KONTEN']);
-            
-            if (type === 'GALERI') {
-              const url = getV(['ISI', 'VALUE', 'KONTEN', 'LINK', 'URL']);
-              if (url) content.galeri.push(url);
-            }
+            rows.forEach(row => {
+              const getV = (keys: string[]) => {
+                for (const k of keys) {
+                  if (row[k] || row[k.toUpperCase()]) return String(row[k] || row[k.toUpperCase()]).trim();
+                }
+                return '';
+              };
+              const type = getV(['TIPE', 'KEY', 'KATEGORI', 'JENIS']).toUpperCase();
+              if (type === 'PROFIL') content.profil = getV(['ISI', 'VALUE', 'KONTEN']);
+              if (type === 'PENGUMUMAN') content.pengumuman = getV(['ISI', 'VALUE', 'KONTEN']);
+              if (type === 'GALERI') {
+                const url = getV(['ISI', 'VALUE', 'KONTEN', 'LINK', 'URL']);
+                if (url) content.galeri.push(url);
+              }
+              if (type === 'SOSMED') {
+                content.sosmed.ig = getV(['IG', 'INSTAGRAM']) || content.sosmed.ig;
+                content.sosmed.tiktok = getV(['TIKTOK']) || content.sosmed.tiktok;
+                content.sosmed.yt = getV(['YT', 'YOUTUBE']) || content.sosmed.yt;
+              }
+              if (type === 'KONTAK') {
+                content.kontak.wa1 = getV(['WA1', 'WHATSAPP1']) || content.kontak.wa1;
+                content.kontak.wa2 = getV(['WA2', 'WHATSAPP2']) || content.kontak.wa2;
+                content.kontak.alamat = getV(['ALAMAT', 'ADDRESS']) || content.kontak.alamat;
+                content.kontak.peta = getV(['PETA', 'MAPS']) || content.kontak.peta;
+              }
+              if (type === 'AGENDA') {
+                content.agenda.push({
+                  tanggal: getV(['TANGGAL', 'DATE']),
+                  kegiatan: getV(['KEGIATAN', 'ACTIVITY', 'ISI', 'VALUE'])
+                });
+              }
+              if (type === 'PERLENGKAPAN') {
+                content.perlengkapan.push({
+                  item: getV(['ITEM', 'NAMA', 'ISI']),
+                  selesai: getV(['SELESAI', 'STATUS', 'CHECK']).toUpperCase() === 'YA'
+                });
+              }
+              if (type === 'PEMBAYARAN') {
+                content.pembayaran.push({
+                  jenis: getV(['JENIS', 'NAMA', 'ITEM']),
+                  total: parseInt(getV(['TOTAL', 'BIAYA'])) || 0,
+                  dibayar: parseInt(getV(['DIBAYAR', 'BAYAR'])) || 0
+                });
+              }
+            });
 
-            if (type === 'SOSMED') {
-              content.sosmed.ig = getV(['IG', 'INSTAGRAM']) || content.sosmed.ig;
-              content.sosmed.tiktok = getV(['TIKTOK']) || content.sosmed.tiktok;
-              content.sosmed.yt = getV(['YT', 'YOUTUBE']) || content.sosmed.yt;
-            }
-
-            if (type === 'KONTAK') {
-              content.kontak.wa1 = getV(['WA1', 'WHATSAPP1']) || content.kontak.wa1;
-              content.kontak.wa2 = getV(['WA2', 'WHATSAPP2']) || content.kontak.wa2;
-              content.kontak.alamat = getV(['ALAMAT', 'ADDRESS']) || content.kontak.alamat;
-              content.kontak.peta = getV(['PETA', 'MAPS']) || content.kontak.peta;
-            }
-
-            if (type === 'AGENDA') {
-              content.agenda.push({
-                tanggal: getV(['TANGGAL', 'DATE']),
-                kegiatan: getV(['KEGIATAN', 'ACTIVITY', 'ISI', 'VALUE'])
-              });
-            }
-
-            if (type === 'PERLENGKAPAN') {
-              content.perlengkapan.push({
-                item: getV(['ITEM', 'NAMA', 'ISI']),
-                selesai: getV(['SELESAI', 'STATUS', 'CHECK']).toUpperCase() === 'YA'
-              });
-            }
-
-            if (type === 'PEMBAYARAN') {
-              content.pembayaran.push({
-                jenis: getV(['JENIS', 'NAMA', 'ITEM']),
-                total: parseInt(getV(['TOTAL', 'BIAYA'])) || 0,
-                dibayar: parseInt(getV(['DIBAYAR', 'BAYAR'])) || 0
-              });
-            }
-          });
-
-          // Fallback if empty
-          if (!content.profil) content.profil = defaultAdminContent.profil;
-          if (content.galeri.length === 0) content.galeri = defaultAdminContent.galeri;
-          if (content.agenda.length === 0) content.agenda = defaultAdminContent.agenda;
-          if (!content.sosmed.ig) content.sosmed = defaultAdminContent.sosmed;
-          if (!content.kontak.wa1) content.kontak = defaultAdminContent.kontak;
-          if (!content.pengumuman) content.pengumuman = defaultAdminContent.pengumuman;
-          if (content.perlengkapan.length === 0) content.perlengkapan = defaultAdminContent.perlengkapan;
-          if (content.pembayaran.length === 0) content.pembayaran = defaultAdminContent.pembayaran;
-
-          resolve(content);
-        },
-        error: () => resolve(getStorage('admin_content', defaultAdminContent))
+            if (!content.profil) content.profil = defaultAdminContent.profil;
+            if (content.galeri.length === 0) content.galeri = defaultAdminContent.galeri;
+            if (content.agenda.length === 0) content.agenda = defaultAdminContent.agenda;
+            resolve(content);
+          },
+          error: () => resolve(getStorage('admin_content', defaultAdminContent))
+        });
       });
-    });
+    }
+    return getStorage('admin_content', defaultAdminContent);
   } catch (error) {
-    console.error('Failed to fetch admin content:', error);
+    console.error('getAdminContent overall failure:', error);
     return getStorage('admin_content', defaultAdminContent);
   }
 }

@@ -46,12 +46,15 @@ export default function Login({ onLogin }: { onLogin: (user: User) => void }) {
       }
     } catch (err: any) {
       console.error('Login error details:', err);
-      if (err.message && err.message.includes('auth/operation-not-allowed')) {
+      if (err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('unauthorized-domain'))) {
+        setError('Domain Vercel Anda belum didaftarkan di Firebase Console. Silakan buka Firebase Console > Authentication > Settings > Authorized domains, lalu tambah domain: simarafah.vercel.app');
+      } else if (err.message && err.message.includes('auth/operation-not-allowed')) {
         setError('Fitur Login belum diaktifkan di Firebase Console. Silakan aktifkan "Anonymous Auth".');
       } else if (err.message && (err.message.includes('fetch') || err.message.includes('network'))) {
         setError('Gangguan koneksi ke server data. Pastikan internet anda stabil.');
       } else {
-        setError('Terjadi kesalahan koneksi: ' + (err.message || 'Unknown Error'));
+        const detail = err.message ? `: ${err.message}` : '';
+        setError('Terjadi kesalahan koneksi' + detail + '. Cek pengaturan domain di Firebase.');
       }
     } finally {
       setLoading(false);

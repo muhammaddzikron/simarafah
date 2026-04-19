@@ -48,7 +48,8 @@ service cloud.firestore {
     
     // settings collection
     match /settings/{docId} {
-      allow get: if isSignedIn() && isValidId(docId);
+      // allow public get for admin_content (public info)
+      allow get: if (docId == 'admin_content' || isSignedIn()) && isValidId(docId);
       allow list: if false; // No listing settings
       
       allow write: if isSignedIn() && (
@@ -60,7 +61,7 @@ service cloud.firestore {
 
     // checklists collection
     match /checklists/{porsi} {
-      allow get: if isSignedIn() && isValidId(porsi);
+      allow get: if isValidId(porsi); // Allow public get to see baggage checklist
       allow write: if isSignedIn() && isValidId(porsi) && isValidChecklist(incoming());
       allow list: if false;
     }
