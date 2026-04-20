@@ -19,6 +19,31 @@ import { Phone } from 'lucide-react';
 import { db, dbDefault } from '../lib/firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
+const DetailItem = ({ label, value }: { label: string, value: any }) => {
+  const isPositive = typeof value === 'string' && (value.toUpperCase().includes('YA') || value.toUpperCase().includes('AWAL') || value.toUpperCase().includes('1'));
+  return (
+    <div className="flex flex-col p-3 bg-neutral-50/50 rounded-2xl border border-neutral-100">
+      <span className="text-[8px] font-black text-neutral-400 uppercase tracking-widest mb-1 italic leading-none">{label}</span>
+      <span className={cn(
+        "text-[10px] font-black uppercase tracking-tight",
+        isPositive ? "text-emerald-600" : "text-neutral-700"
+      )}>{value || '-'}</span>
+    </div>
+  );
+};
+
+const HealthBadge = ({ label, active }: { label: string, active: boolean }) => (
+  <div className={cn(
+    "flex items-center gap-2 px-4 py-3 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all shadow-sm",
+    active 
+      ? "bg-rose-50 border-rose-100 text-rose-600" 
+      : "bg-neutral-50 border-neutral-100 text-neutral-400 opacity-60"
+  )}>
+    <div className={cn("w-2 h-2 rounded-full", active ? "bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.5)]" : "bg-neutral-300")} />
+    {label}
+  </div>
+);
+
 const getAI = () => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
@@ -1208,116 +1233,198 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-4"
               >
-                {searchResults.map((j: any, i) => (
-                  <div key={i} className="bg-white rounded-[32px] border border-neutral-100 shadow-sm overflow-hidden">
-                    <div className="bg-emerald-600 p-5 text-center">
-                       <h3 className="text-lg font-black text-white uppercase">{j.namaLengkap}</h3>
-                       <div className="mt-1 inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg text-[9px] font-black text-white uppercase border border-white/10 italic tracking-widest">
-                          Porsi: {j.nomorPorsi} • No: {j.no}
-                       </div>
+                {searchResults.filter(j => j.searchType === 'jemaah').map((j: any, i) => (
+                  <motion.div 
+                    key={i} 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-white rounded-[40px] border border-neutral-100 shadow-xl shadow-neutral-100 overflow-hidden"
+                  >
+                    {/* Header: Nama Lengkap */}
+                    <div className="bg-emerald-600 p-6 text-center relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-10">
+                         <UserCircle className="w-16 h-16 text-white" />
+                      </div>
+                      <div className="relative z-10">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-[9px] font-black text-white uppercase tracking-widest italic mb-2 border border-white/10">
+                          NO: {j.no} • PORSI: {j.nomorPorsi}
+                        </div>
+                        <h3 className="text-xl font-black text-white uppercase tracking-tight italic drop-shadow-md">
+                          {j.namaLengkap}
+                        </h3>
+                      </div>
                     </div>
-                    
-                    <div className="p-6 space-y-4">
-                      <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                        <div className="space-y-1">
-                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Kloter / Rombongan</p>
-                          <p className="text-[11px] font-bold text-neutral-800">{j.kloter || '-'} / Romb. {j.rombongan || '-'}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Masuk Asrama</p>
-                          <p className="text-[11px] font-bold text-neutral-800">{j.jadwalMasukAsrama || '-'}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Umur / Kelamin</p>
-                          <p className="text-[11px] font-bold text-neutral-800">{j.umur || '-'} Thn / {j.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Tanazul / Murur</p>
-                          <p className="text-[11px] font-bold text-neutral-800">{j.tanazul || 'Tidak'} / {j.murur || 'Tidak'}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Nafar / Dam</p>
-                          <p className="text-[11px] font-bold text-neutral-800">{j.nafar || '-'} / {j.jalurDam || '-'}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Umrah Gel. / Badal</p>
-                          <p className="text-[11px] font-bold text-neutral-800">{j.umrahGelombang || '-'} / {j.badal || 'Tidak'}</p>
+
+                    <div className="p-6 space-y-6">
+                      {/* Section 1: Basic Info */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <DetailItem label="Kloter (B)" value={j.kloter} />
+                        <DetailItem label="Rombongan (C)" value={j.rombongan} />
+                        <div className="col-span-2">
+                           <DetailItem label="Jadwal Masuk Asrama (D)" value={j.jadwalMasukAsrama} />
                         </div>
                       </div>
 
-                      <div className="p-4 bg-neutral-50 rounded-2xl space-y-2">
-                        <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Alamat Lengkap</p>
-                        <p className="text-[10px] font-bold text-neutral-700 leading-relaxed uppercase">
-                          {j.alamat}, {j.desa}, {j.kecamatan}, {j.kabupaten}
-                        </p>
-                      </div>
-
+                      {/* Section 2: Kontak Jemaah */}
                       <div className="space-y-3">
-                         {/* Ketua Rombongan */}
-                         <div className="bg-white border border-neutral-100 rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                            <div className="space-y-0.5">
-                               <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest">Ketua Rombongan</p>
-                               <p className="text-[11px] font-black text-neutral-800">{j.namaKetuaRombongan || '-'}</p>
-                            </div>
-                            <div className="flex gap-2">
-                               <a href={`tel:${j.waKarom}`} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm active:scale-95 transition-all">
-                                  <Phone className="w-3.5 h-3.5" />
-                               </a>
-                               <a href={`https://wa.me/${String(j.waKarom).replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm active:scale-95 transition-all">
-                                  <Smartphone className="w-3.5 h-3.5" />
-                               </a>
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Kontak Jemaah</p>
+                        <div className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100 flex items-center justify-between">
+                           <div>
+                              <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest mb-1">WhatsApp Jemaah (P)</p>
+                              <p className="text-xs font-black text-neutral-800">{j.wa || '-'}</p>
+                           </div>
+                           {j.wa && (
+                             <div className="flex gap-2">
+                                <a href={`https://wa.me/${formatWA(j.wa)}`} target="_blank" rel="noreferrer" className="p-2 bg-white text-emerald-600 rounded-xl border border-emerald-100 shadow-sm active:scale-95 transition-all">
+                                   <Smartphone className="w-4 h-4" />
+                                </a>
+                                <a href={`tel:${j.wa.replace(/[^0-9]/g, '')}`} className="p-2 bg-emerald-600 text-white rounded-xl shadow-sm active:scale-95 transition-all">
+                                   <Phone className="w-4 h-4" />
+                                </a>
+                             </div>
+                           )}
+                        </div>
+                      </div>
+
+                      {/* Section 3: Personal Details */}
+                      <div className="grid grid-cols-2 gap-3">
+                         <DetailItem label="Umur (J)" value={`${j.umur} Tahun`} />
+                         <DetailItem label="Kelamin (K)" value={j.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan'} />
+                         <div className="col-span-2">
+                            <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-100 italic">
+                               <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest mb-1">Alamat Domisili (L,M,N,O)</p>
+                               <p className="text-[10px] font-bold text-neutral-700 leading-relaxed uppercase">
+                                 {j.alamat}, {j.desa}, {j.kecamatan}, {j.kabupaten}
+                               </p>
                             </div>
                          </div>
-                         
-                         {/* Pendamping */}
-                         <div className="bg-white border border-neutral-100 rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                            <div className="space-y-0.5">
-                               <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest">Pendamping Lansia</p>
-                               <p className="text-[11px] font-black text-neutral-800">{j.pendampingLansia || '-'}</p>
-                            </div>
-                            {j.waPendamping && (
-                              <div className="flex gap-2">
-                                <a href={`tel:${j.waPendamping}`} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm active:scale-95 transition-all">
-                                    <Phone className="w-3.5 h-3.5" />
-                                </a>
-                                <a href={`https://wa.me/${String(j.waPendamping).replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm active:scale-95 transition-all">
-                                    <Smartphone className="w-3.5 h-3.5" />
-                                </a>
+                      </div>
+
+                      {/* Section 4: Ketua Rombongan */}
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Ketua Rombongan</p>
+                        <div className="bg-amber-50/50 rounded-3xl p-5 border border-amber-100 space-y-4">
+                           <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-amber-600 shadow-sm border border-amber-100 italic font-black">
+                                 {j.rombongan}
                               </div>
-                            )}
-                         </div>
+                              <div>
+                                 <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest leading-none mb-1">Nama Karom (E)</p>
+                                 <p className="text-sm font-black text-neutral-800 uppercase tracking-tight">{j.namaKetuaRombongan || '-'}</p>
+                              </div>
+                           </div>
+                           <div className="flex items-center justify-between pt-3 border-t border-amber-100">
+                              <div className="space-y-0.5">
+                                 <p className="text-[8px] font-black text-amber-400 uppercase tracking-widest leading-none">WhatsApp Karom (AC)</p>
+                                 <p className="text-[10px] font-bold text-amber-600">{j.waKarom || '-'}</p>
+                              </div>
+                              {j.waKarom && (
+                                <div className="flex gap-2">
+                                   <a href={`https://wa.me/${formatWA(j.waKarom)}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase shadow-sm">
+                                      <Smartphone className="w-3.5 h-3.5" /> WA
+                                   </a>
+                                   <a href={`tel:${j.waKarom.replace(/[^0-9]/g, '')}`} className="p-2 bg-amber-500 text-white rounded-xl shadow-sm">
+                                      <Phone className="w-3.5 h-3.5" />
+                                   </a>
+                                </div>
+                              )}
+                           </div>
+                        </div>
+                      </div>
 
-                         {/* Hotel */}
-                         <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                            <div className="space-y-0.5">
-                               <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Hotel Mekah</p>
-                               <p className="text-[11px] font-black text-emerald-900">{j.hotelMekah || '-'}</p>
+                      {/* Section 5: Status Layanan */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <DetailItem label="Tanazul (Q)" value={j.tanazul} />
+                        <DetailItem label="Murur (R)" value={j.murur} />
+                        <DetailItem label="Nafar (S)" value={j.nafar} />
+                        <DetailItem label="Jalur DAM (T)" value={j.jalurDam} />
+                        <DetailItem label="Umrah Gel (U)" value={j.umrahGelombang} />
+                        <DetailItem label="Badal (V)" value={j.badal} />
+                      </div>
+
+                      {/* Section 6: Kesehatan */}
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest px-1">Kondisi Kesehatan</p>
+                        <div className="grid grid-cols-2 gap-2">
+                           <HealthBadge label="Kursi Roda (W)" active={j.kursiRoda === 'YA'} />
+                           <HealthBadge label="Tongkat (X)" active={j.tongkat === 'YA'} />
+                           <HealthBadge label="Pen Tubuh (Y)" active={j.penTubuh === 'YA'} />
+                           <HealthBadge label="Ring Jantung (Z)" active={j.ringJantung === 'YA'} />
+                        </div>
+                      </div>
+
+                      {/* Section 7: Pendamping */}
+                      <div className="p-5 bg-purple-50/50 rounded-3xl border border-purple-100 space-y-4">
+                         <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-purple-600 shadow-sm border border-purple-100">
+                               <UserPlus className="w-5 h-5" />
                             </div>
-                            {j.linkPetaHotel && (
-                              <a href={j.linkPetaHotel} target="_blank" rel="noreferrer" className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md shadow-emerald-200 active:scale-95 transition-all flex items-center gap-2">
-                                 <MapPin className="w-3 h-3" /> Peta
-                              </a>
-                            )}
+                            <div>
+                               <p className="text-[8px] font-black text-purple-500 uppercase tracking-widest leading-none mb-1">Pendamping Lansia (AA)</p>
+                               <p className="text-sm font-black text-neutral-800 uppercase tracking-tight">{j.pendampingLansia || '-'}</p>
+                            </div>
                          </div>
+                         {j.waPendamping && (
+                           <div className="flex items-center justify-between pt-3 border-t border-purple-100">
+                              <div className="space-y-0.5">
+                                 <p className="text-[8px] font-black text-purple-400 uppercase tracking-widest leading-none">WhatsApp Pendamping (AB)</p>
+                                 <p className="text-[10px] font-bold text-purple-600">{j.waPendamping}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                 <a href={`https://wa.me/${formatWA(j.waPendamping)}`} target="_blank" rel="noreferrer" className="p-2 bg-emerald-500 text-white rounded-xl shadow-sm">
+                                    <Smartphone className="w-3.5 h-3.5" />
+                                 </a>
+                                 <a href={`tel:${j.waPendamping.replace(/[^0-9]/g, '')}`} className="p-2 bg-purple-500 text-white rounded-xl shadow-sm">
+                                    <Phone className="w-3.5 h-3.5" />
+                                 </a>
+                              </div>
+                           </div>
+                         )}
                       </div>
 
-                      {/* Kesehatan Pills */}
-                      <div className="flex flex-wrap gap-2">
-                         {j.kursiRoda === 'YA' && <span className="px-2 py-1 bg-rose-50 text-rose-600 rounded-lg text-[8px] font-black uppercase border border-rose-100 italic">♿ Kursi Roda</span>}
-                         {j.tongkat === 'YA' && <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded-lg text-[8px] font-black uppercase border border-amber-100 italic">🦯 Tongkat/Kruk</span>}
-                         {j.penTubuh === 'YA' && <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[8px] font-black uppercase border border-indigo-100 italic">🦴 Pen Tubuh</span>}
-                         {j.ringJantung === 'YA' && <span className="px-2 py-1 bg-rose-50 text-rose-600 rounded-lg text-[8px] font-black uppercase border border-rose-100 italic">❤️ Ring Jantung</span>}
-                      </div>
-
-                      <div className="pt-4 border-t border-neutral-50 flex items-center justify-between">
-                         <div className="flex items-center gap-2">
-                            <Smartphone className="w-3.5 h-3.5 text-neutral-300" />
-                            <span className="text-[10px] font-bold text-neutral-400">{j.wa || '-'}</span>
-                         </div>
+                      {/* Section 8: Hotel */}
+                      <div className="bg-indigo-600 rounded-3xl p-6 shadow-xl shadow-indigo-100 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                           <MapPin className="w-16 h-16 text-white" />
+                        </div>
+                        <div className="relative z-10 space-y-4">
+                          <div>
+                            <p className="text-[9px] font-black text-indigo-200 uppercase tracking-widest mb-1 italic">Hotel Makkah (AF)</p>
+                            <h4 className="text-lg font-black text-white italic tracking-tight leading-tight">{j.hotelMekah || 'Menunggu Update'}</h4>
+                          </div>
+                          {j.linkPetaHotel && (
+                            <a 
+                              href={j.linkPetaHotel} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="flex items-center justify-center gap-2 w-full py-4 bg-white text-indigo-600 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg transition-all active:scale-95"
+                            >
+                              <MapPin className="w-4 h-4" /> Buka Penunjuk Peta (AG)
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
+                  </motion.div>
+                ))}
+                {searchResults.filter(j => j.searchType === 'materi').map((m: any, i) => (
+                  <div key={`m-${i}`} className="bg-white rounded-2xl border border-neutral-100 p-4 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <BookOpen className="w-5 h-5 text-indigo-500" />
+                      <div>
+                        <p className="text-sm font-black text-neutral-800">{m.judul}</p>
+                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{m.tipe}</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setActiveView('materi')}
+                      className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"
+                    >
+                      <ArrowRightLeft className="w-4 h-4" />
+                    </button>
                   </div>
                 ))}
+
                 {searchResults.length === 0 && searchQuery.length > 2 && (
                   <p className="text-center text-[10px] font-bold text-neutral-400 uppercase tracking-widest italic py-4">Data tidak ditemukan</p>
                 )}

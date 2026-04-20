@@ -239,7 +239,7 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
 
             const idx = {
               nama: 8, // I
-              porsi: 5, // F (Sheet 1 Kolom F usually holds porsi if F is index 5)
+              porsi: 5, // F
               kloter: 1, // B
               romb: 2, // C
               asrama: 3, // D
@@ -261,7 +261,7 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
               badal: 21, // V
               roda: 22, // W
               tongkat: 23, // X
-              penTubuh: 30, // AE? Let's check V is 21, W is 22... wait, requirements say Pen Tubuh is V? No, Badal is V, Kursi Roda is W, Tongkat X. Requirements say Pen Tubuh is V again? typo in req? likely Y.
+              penTubuh: 24, // Y (Requirement said V but V is Badal, logically Y is Pen Tubuh)
               ringJantung: 25, // Z
               pendamping: 26, // AA
               waPendamping: 27, // AB
