@@ -295,12 +295,31 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
 
     for (const p of possiblePaths) {
       try {
-        const ref = p.path.length === 2 ? doc(p.db, p.path[0], p.path[1]) : doc(p.db, p.path[0]);
-        const snap = await getDoc(ref).catch(() => null);
+        let snap;
+        if (p.path.length === 2) {
+          snap = await getDoc(doc(p.db, p.path[0], p.path[1])).catch(() => null);
+        } else {
+          // If it's single length, it's likely a root collection named as the doc should be,
+          // but if it's meant to be a doc, we can't reliably guess the ID.
+          // However, many users store a single doc in a collection.
+          const colSnap = await getDocs(collection(p.db, p.path[0])).catch(() => null);
+          if (colSnap && !colSnap.empty) {
+            // Try to find if any doc in this collection has the jemaah array
+            for (const d of colSnap.docs) {
+              const dData = d.data() as { jemaah: Jemaah[] };
+              if (dData.jemaah && dData.jemaah.length > 0) {
+                console.log(`✅ Success! Recovered jemaah data from collection ${p.label}. Count: ${dData.jemaah.length}`);
+                return dData.jemaah;
+              }
+            }
+          }
+          continue;
+        }
+
         if (snap && snap.exists()) {
           const data = snap.data() as { jemaah: Jemaah[] };
           if (data.jemaah && data.jemaah.length > 0) {
-            console.log(`✅ Success! Recovered jemaah data from ${p.label}. Count: ${data.jemaah.length}`);
+            console.log(`✅ Success! Recovered jemaah data from document ${p.label}. Count: ${data.jemaah.length}`);
             return data.jemaah;
           }
         }
@@ -366,12 +385,30 @@ export async function getAdminContent(): Promise<AdminContent> {
     console.log("--- Starting Deep Search for Recovery ---");
     for (const p of possiblePaths) {
       try {
-        const ref = p.path.length === 2 ? doc(p.db, p.path[0], p.path[1]) : doc(p.db, p.path[0]);
-        const snap = await getDoc(ref).catch(() => null);
+        let snap;
+        if (p.path.length === 2) {
+          snap = await getDoc(doc(p.db, p.path[0], p.path[1])).catch(() => null);
+        } else {
+          // Single segment path probe
+          const colSnap = await getDocs(collection(p.db, p.path[0])).catch(() => null);
+          if (colSnap && !colSnap.empty) {
+            for (const d of colSnap.docs) {
+              const dData = d.data() as AdminContent;
+              if (dData.materi && dData.materi.length > 0) {
+                 console.log(`✅ Success! Recovered content from collection ${p.label}. Materials: ${dData.materi.length}`);
+                 recoveredData = dData;
+                 break;
+              }
+            }
+          }
+          if (recoveredData) break;
+          continue;
+        }
+
         if (snap && snap.exists()) {
           const data = snap.data() as AdminContent;
           if (data.materi && data.materi.length > 0) {
-            console.log(`✅ Success! Recovered data from ${p.label}. Materials: ${data.materi.length}`);
+            console.log(`✅ Success! Recovered data from document ${p.label}. Materials: ${data.materi.length}`);
             recoveredData = data;
             break;
           }
