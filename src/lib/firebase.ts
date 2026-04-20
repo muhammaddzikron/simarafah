@@ -50,20 +50,31 @@ export function handleFirestoreError(error: any, operation: FirestoreErrorInfo['
   throw error;
 }
 
+export let connectionStatus: 'loading' | 'online' | 'offline' | 'restricted' = 'loading';
+
 // CRITICAL CONSTRAINT: Test connection on boot
-async function testConnection() {
+export async function testFirebaseConnection() {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    console.log('Firebase connection verified');
+    const docRef = doc(db, 'test', 'connection');
+    await getDocFromServer(docRef);
+    console.log('Firebase: connection verified (Online)');
+    connectionStatus = 'online';
+    return 'online';
   } catch (error: any) {
     if (error.message && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration: Client is offline.");
+      console.error("Firebase: Client is offline.");
+      connectionStatus = 'offline';
+      return 'offline';
     } else if (error.code === 'permission-denied') {
-      console.warn("Firebase connection test: permission-denied. This is expected if the 'test/connection' doc is protected.");
+      console.warn("Firebase: restricted (Permission Denied). This is normal if document is protected.");
+      connectionStatus = 'restricted';
+      return 'restricted';
     } else {
-      console.error("Firebase connection error:", error);
+      console.error("Firebase: connection error:", error.code, error.message);
+      connectionStatus = 'offline';
+      return 'offline';
     }
   }
 }
 
-testConnection();
+testFirebaseConnection();

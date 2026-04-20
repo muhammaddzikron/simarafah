@@ -32,8 +32,11 @@ service cloud.firestore {
     }
     
     function isValidAdminContent(data) {
-      return data.updatedAt == request.time &&
-             (data.profil is string && data.profil.size() <= 10000);
+      return data.updatedAt is timestamp;
+    }
+    
+    function isValidJemaah(data) {
+      return data.jemaah is list && data.updatedAt is timestamp;
     }
     
     function isValidRegistration(data) {
@@ -55,7 +58,7 @@ service cloud.firestore {
       allow write: if isSignedIn() && (
         (docId == 'admin_content' && isValidAdminContent(incoming())) ||
         (docId == 'admin_users' && incoming().users is list) ||
-        (docId == 'jemaah_data' && incoming().jemaah is list)
+        (docId == 'jemaah_data' && isValidJemaah(incoming()))
       );
     }
 

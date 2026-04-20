@@ -1,19 +1,13 @@
 import { Jemaah, AdminContent, User, PaymentData, UserRole, Registration, MateriItem } from '../types';
 import Papa from 'papaparse';
-import { db, dbDefault, auth, handleFirestoreError } from '../lib/firebase';
+import { db, dbDefault, auth, handleFirestoreError, testFirebaseConnection } from '../lib/firebase';
+
+export { testFirebaseConnection };
 import { doc, getDoc, setDoc, serverTimestamp, collection, getDocs, query, orderBy, deleteDoc, updateDoc } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
 
 const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/14W48hU9eYzxZ5EkjGGSTs1WCTzITV02QooOoo7lYix0/export?format=csv&gid=9046765';
 const SPREADSHEET_CONTENT_URL = 'https://docs.google.com/spreadsheets/d/14W48hU9eYzxZ5EkjGGSTs1WCTzITV02QooOoo7lYix0/export?format=csv&gid=1724714709';
-
-// In-memory cache for jemaah data to speed up repeated access and login
-let cachedJemaah: Jemaah[] | null = null;
-let cachedAdminContent: AdminContent | null = null;
-let lastFetchTime = 0;
-let lastContentFetchTime = 0;
-let successfulContentPath: any = null; // Remember which path worked to avoid probing 8 paths every time
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
 
 // Storage keys with versioning to force refresh on logic change
 const STORAGE_VER = 'v4';
@@ -37,6 +31,14 @@ const getStorage = <T>(key: string, initial: T): T => {
 const saveStorage = (key: string, data: any) => {
   localStorage.setItem(key, JSON.stringify(data));
 };
+
+// In-memory cache for jemaah data to speed up repeated access and login
+let cachedJemaah: Jemaah[] | null = null;
+let cachedAdminContent: AdminContent | null = null;
+let lastFetchTime = 0;
+let lastContentFetchTime = 0;
+let successfulContentPath: any = getStorage<{db: any, path: string[], label: string} | null>('successful_content_path', null); 
+const CACHE_TTL = 3 * 60 * 1000; // Reduced to 3 minutes cache
 
 // Mock data based on the requirements
 export const defaultJemaah: Jemaah[] = [
@@ -154,8 +156,8 @@ async function ensureAuth() {
   if (!auth.currentUser) {
     try {
       console.log("Firebase: Attempting anonymous authentication...");
-      await signInAnonymously(auth);
-      console.log("Firebase: Anonymous authentication successful.");
+      const cred = await signInAnonymously(auth);
+      console.log("Firebase: Anonymous authentication successful. UID:", cred.user.uid);
     } catch (e: any) {
       // auth/admin-restricted-operation means Anonymous Auth is disabled in Firebase Console
       if (e.code === 'auth/admin-restricted-operation') {
@@ -171,6 +173,7 @@ export function forceResetLocalData() {
   localStorage.removeItem(KEY_JEMAAH);
   localStorage.removeItem(KEY_CONTENT);
   localStorage.removeItem(KEY_USERS);
+  localStorage.removeItem('successful_content_path');
   window.location.reload();
 }
 
@@ -412,25 +415,21 @@ export async function saveJemaah(jemaah: Jemaah[]) {
   }
 }
 
-export async function getAdminContent(): Promise<AdminContent> {
+export async function getAdminContent(forceSync = false): Promise<AdminContent> {
   const now = Date.now();
-  if (cachedAdminContent && (now - lastContentFetchTime < CACHE_TTL)) {
+  if (!forceSync && cachedAdminContent && (now - lastContentFetchTime < CACHE_TTL)) {
     return cachedAdminContent;
   }
 
   try {
     await ensureAuth();
     
-    // Most likely paths first, plus the one that worked last time
+    // Most likely paths first
     const possiblePaths = successfulContentPath ? [successfulContentPath] : [
       { db: db, path: ['settings', 'admin_content'], label: 'DB-Config: settings/admin_content' },
-      { db: db, path: ['settings', 'admin-content'], label: 'DB-Config: settings/admin-content' },
-      { db: db, path: ['settings', 'entities'], label: 'DB-Config: settings/entities' },
-      { db: db, path: ['admin_content'], label: 'DB-Config: root/admin_content' },
       { db: dbDefault, path: ['settings', 'admin_content'], label: 'DB-Default: settings/admin_content' },
-      { db: dbDefault, path: ['settings', 'admin-content'], label: 'DB-Default: settings/admin-content' },
-      { db: dbDefault, path: ['settings', 'entities'], label: 'DB-Default: settings/entities' },
-      { db: dbDefault, path: ['admin_content'], label: 'DB-Default: root/admin_content' },
+      { db: db, path: ['settings', 'admin-content'], label: 'DB-Config: settings/admin-content' },
+      { db: db, path: ['admin_content'], label: 'DB-Config: root/admin_content' },
     ];
 
     let recoveredData: AdminContent | null = null;
@@ -464,11 +463,13 @@ export async function getAdminContent(): Promise<AdminContent> {
             console.log(`✅ Success! Recovered data from document ${p.label}. Materials: ${data.materi.length}`);
             recoveredData = data;
             successfulContentPath = p; // Cache the successful path
+            saveStorage('successful_content_path', p);
             break;
           }
           console.log(`ℹ️ Found document at ${p.label}, but it has no materials.`);
-          recoveredData = recoveredData || data; // Keep it if we haven't found better
+          recoveredData = recoveredData || data; 
           successfulContentPath = p;
+          saveStorage('successful_content_path', p);
         }
       } catch (e) {
         console.warn(`Probing ${p.label} failed:`, e);
@@ -634,21 +635,48 @@ export async function getAdminContent(): Promise<AdminContent> {
   }
 }
 
+// Recursive safer sanitization for Firebase
+function sanitizePayload(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(v => sanitizePayload(v));
+  } else if (obj !== null && typeof obj === 'object') {
+    const newObj: any = {};
+    for (const key in obj) {
+      if (obj[key] !== undefined) {
+        newObj[key] = sanitizePayload(obj[key]);
+      }
+    }
+    return newObj;
+  }
+  return obj;
+}
+
 export async function saveAdminContent(content: AdminContent) {
   try {
     await ensureAuth();
-    // Sanitize to remove undefined for Firebase
-    const sanitized = JSON.parse(JSON.stringify({
-      ...content,
-    }));
     
-    await setDoc(doc(db, 'settings', 'admin_content'), {
+    // Clean data for Firestore (remove undefineds)
+    const sanitized = sanitizePayload(content);
+    
+    console.log("Firebase Save: Attempting to write to settings/admin_content (Primary Path)...");
+    const targetDoc = doc(db, 'settings', 'admin_content');
+    
+    await setDoc(targetDoc, {
       ...sanitized,
       updatedAt: serverTimestamp()
-    }).catch(e => handleFirestoreError(e, 'write', 'settings/admin_content'));
+    }).catch(e => {
+      console.error("Firestore setDoc failed:", e);
+      handleFirestoreError(e, 'write', 'settings/admin_content');
+    });
+    
+    console.log("Firebase Save: Success. Updating local cache.");
+    
+    // Update path cache to the one we just saved to
+    successfulContentPath = { db: db, path: ['settings', 'admin_content'], label: 'DB-Config: settings/admin_content' };
+    saveStorage('successful_content_path', successfulContentPath);
     
     saveStorage(KEY_CONTENT, content);
-    cachedAdminContent = content; // Update local cache
+    cachedAdminContent = content;
     lastContentFetchTime = Date.now();
   } catch (e) {
     console.error("Error saving admin content to Firebase:", e);

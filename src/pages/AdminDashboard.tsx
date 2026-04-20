@@ -17,7 +17,7 @@ import {
   fetchJemaah, getAdminContent, saveAdminContent, 
   getAdminUsers, saveAdminUsers, getRegistrations,
   deleteRegistration, updateRegistrationStatus, updateRegistration,
-  defaultAdminContent, forceResetLocalData
+  defaultAdminContent, forceResetLocalData, testFirebaseConnection
 } from '../services/api';
 import { cn } from '../lib/utils';
 import * as XLSX from 'xlsx';
@@ -70,11 +70,21 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
       showToast('Konten berhasil disimpan ke Cloud Firebase!');
     } catch (err: any) {
       console.error("Error saving content:", err);
+      let errorMsg = 'Gagal menyimpan ke Cloud. Periksa koneksi internet Anda atau hubungi sistem admin.';
+      
       if (err?.code === 'resource-exhausted') {
-        showToast('Kuota Cloud JEMAAH penuh (Limit Free). Mohon coba lagi besok saat kuota direset.', 'error');
-      } else {
-        showToast('Gagal menyimpan ke Cloud. Periksa koneksi internet Anda.', 'error');
+        errorMsg = 'Kuota Cloud JEMAAH penuh (Limit Free). Mohon coba lagi besok saat kuota direset.';
+      } else if (err?.message && err.message.includes('permission-denied')) {
+        errorMsg = 'Akses ditolak (Permission Denied). Pastikan "Anonymous Auth" aktif di Console Firebase dan domain Vercel sudah di-allowlist.';
+      } else if (err?.message && err.message.startsWith('{')) {
+        // This might be our custom FirestoreErrorInfo
+        try {
+          const info = JSON.parse(err.message);
+          errorMsg = `Error [${info.operationType}]: ${info.error}. (Path: ${info.path})`;
+        } catch { /* ignore */ }
       }
+      
+      showToast(errorMsg, 'error');
     } finally {
       setIsSavingContent(false);
     }
@@ -99,19 +109,22 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
     ringJantung: ''
   });
 
+  const [cloudStatus, setCloudStatus] = useState<'loading' | 'online' | 'offline' | 'restricted'>('loading');
+
   const loadAllData = async (isManual = false) => {
     try {
       if (isManual) setRefreshing(true);
       else setLoading(true);
       
-      const [dataJ, dataC, dataA, dataR] = await Promise.all([
+      const [status, dataJ, dataC, dataA, dataR] = await Promise.all([
+        testFirebaseConnection(),
         fetchJemaah(isManual),
-        getAdminContent(),
+        getAdminContent(isManual), // Use isManual as forceSync
         getAdminUsers(),
         getRegistrations()
       ]);
       
-      setJemaah(dataJ || []);
+      setCloudStatus(status as any);
       if (dataC) setContent(dataC);
       setAdmins(dataA || []);
       setRegistrations(dataR || []);
@@ -554,6 +567,35 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                 >
                   <AlertTriangle className="w-3.5 h-3.5" /> Reset Cache
                 </button>
+
+                <div className="pt-2">
+                  <div className={cn(
+                    "px-3 py-2 rounded-xl flex items-center justify-between border",
+                    cloudStatus === 'online' ? "bg-emerald-50 border-emerald-100 text-emerald-600" :
+                    cloudStatus === 'restricted' ? "bg-amber-50 border-amber-100 text-amber-600" :
+                    "bg-rose-50 border-rose-100 text-rose-600"
+                  )}>
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "w-1.5 h-1.5 rounded-full",
+                        cloudStatus === 'online' ? "bg-emerald-500 animate-pulse" :
+                        cloudStatus === 'restricted' ? "bg-amber-500" :
+                        "bg-rose-500"
+                      )} />
+                      <span className="text-[9px] font-black uppercase tracking-widest">
+                        {cloudStatus === 'online' ? 'Cloud: Online' : 
+                         cloudStatus === 'restricted' ? 'Cloud: Dibatasi' : 
+                         cloudStatus === 'loading' ? 'Cloud: Loading' : 'Cloud: Terputus'}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => testFirebaseConnection().then(s => setCloudStatus(s as any))}
+                      className="p-1 hover:bg-black/5 rounded-md transition-colors"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.aside>
@@ -2054,6 +2096,48 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
 
         {activeTab === 'admin' && (
           <section className="space-y-10 max-w-5xl">
+            {/* Cloud Status Card */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white p-6 rounded-3xl border border-neutral-100 shadow-sm flex items-center gap-4">
+                <div className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm",
+                  cloudStatus === 'online' ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                )}>
+                  <Database className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-[11px] font-black text-neutral-400 uppercase tracking-widest leading-none mb-1.5">Cloud: {cloudStatus}</h3>
+                  <div className="flex items-center gap-2">
+                    <div className={cn("w-2 h-2 rounded-full", cloudStatus === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500')} />
+                    <span className="text-[10px] font-bold text-neutral-800 uppercase tracking-tighter">
+                      {cloudStatus === 'online' ? 'Terhubung & Sinkron' : 'Koneksi Terputus'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-3xl border border-neutral-100 shadow-sm flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-sm">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-[11px] font-black text-neutral-400 uppercase tracking-widest leading-none mb-1.5">Update Terakhir</h3>
+                  <p className="text-[10px] font-bold text-neutral-800 uppercase tracking-tighter">
+                    {lastSaved ? lastSaved.toLocaleTimeString('id-ID') : 'Belum Sinkron'}
+                  </p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => loadAllData(true)}
+                disabled={refreshing}
+                className="bg-primary text-white p-6 rounded-3xl shadow-lg shadow-primary/20 flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50"
+              >
+                <RefreshCw className={cn("w-5 h-5", refreshing && "animate-spin")} />
+                <span className="text-[11px] font-black uppercase tracking-widest">Sync Ulang Cloud</span>
+              </button>
+            </div>
+
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="space-y-1 text-center md:text-left">
                 <h2 className="text-xl md:text-2xl font-black text-primary uppercase tracking-tight">Panel Kelola Admin</h2>
