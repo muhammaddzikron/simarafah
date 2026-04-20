@@ -1,12 +1,19 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { initializeFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
-export const dbDefault = getFirestore(app, '(default)');
+
+// Use experimentalForceLongPolling to resolve connection timeouts in sandboxed environments
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+}, firebaseConfig.firestoreDatabaseId || '(default)');
+
+export const dbDefault = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+}, '(default)');
 
 /**
  * Interface and handler for rich Firestore error reporting.

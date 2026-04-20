@@ -360,6 +360,7 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
 
 export async function saveJemaah(jemaah: Jemaah[]) {
   try {
+    await ensureAuth();
     await setDoc(doc(db, 'settings', 'jemaah_data'), {
       jemaah,
       updatedAt: serverTimestamp()
@@ -579,6 +580,7 @@ export async function getAdminContent(): Promise<AdminContent> {
 
 export async function saveAdminContent(content: AdminContent) {
   try {
+    await ensureAuth();
     // Sanitize to remove undefined for Firebase
     const sanitized = JSON.parse(JSON.stringify({
       ...content,
@@ -599,6 +601,7 @@ export async function saveAdminContent(content: AdminContent) {
 
 export async function getAdminUsers(): Promise<User[]> {
   try {
+    await ensureAuth();
     const docRef = doc(db, 'settings', 'admin_users');
     const docSnap = await getDoc(docRef).catch(e => handleFirestoreError(e, 'get', 'settings/admin_users'));
     if (docSnap.exists()) {
@@ -612,6 +615,7 @@ export async function getAdminUsers(): Promise<User[]> {
 
 export async function saveAdminUsers(users: User[]) {
   try {
+    await ensureAuth();
     await setDoc(doc(db, 'settings', 'admin_users'), {
       users,
       updatedAt: serverTimestamp()
@@ -625,6 +629,7 @@ export async function saveAdminUsers(users: User[]) {
 
 export async function getRegistrations(): Promise<Registration[]> {
   try {
+    await ensureAuth();
     const q = query(collection(db, 'registrations'), orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q).catch(e => handleFirestoreError(e, 'list', 'registrations'));
     return querySnapshot.docs.map(doc => ({
@@ -639,6 +644,7 @@ export async function getRegistrations(): Promise<Registration[]> {
 
 export async function deleteRegistration(id: string) {
   try {
+    await ensureAuth();
     await deleteDoc(doc(db, 'registrations', id)).catch(e => handleFirestoreError(e, 'delete', `registrations/${id}`));
   } catch (err) {
     console.error("Error deleting registration:", err);
@@ -647,6 +653,7 @@ export async function deleteRegistration(id: string) {
 
 export async function updateRegistrationStatus(id: string, status: string) {
   try {
+    await ensureAuth();
     await updateDoc(doc(db, 'registrations', id), { status }).catch(e => handleFirestoreError(e, 'update', `registrations/${id}`));
   } catch (err) {
     console.error("Error updating registration status:", err);
@@ -655,6 +662,7 @@ export async function updateRegistrationStatus(id: string, status: string) {
 
 export async function updateRegistration(id: string, data: Partial<Registration>) {
   try {
+    await ensureAuth();
     await updateDoc(doc(db, 'registrations', id), {
       ...data,
       updatedAt: serverTimestamp()
