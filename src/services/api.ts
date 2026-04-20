@@ -75,10 +75,10 @@ Selama lebih dari 26 tahun berdiri, KBIHU Arafah Muhammadiyah Klaten telah konsi
 
 Dalam pelayanannya, KBIHU Arafah Muhammadiyah Klaten menyelenggarakan berbagai kegiatan, di antaranya bimbingan manasik haji secara intensif dan simulasi manasik massal, yang bertujuan memperkuat pemahaman jamaah terhadap rukun dan tata cara ibadah haji. Selain itu, lembaga ini juga memberikan pendampingan langsung kepada jamaah, baik saat di tanah air maupun selama pelaksanaan ibadah di Tanah Suci. Pada musim haji 2026, KBIHU Arafah Klaten tercatat mendampingi sekitar 726 calon jamaah haji yang terbagi dalam beberapa kelompok terbang (kloter).
 
-Seiring perkembangan zaman, KBIHU Arafah Muhammadiyah Klaten juga mengadopsi transformasi digital dalam memberikan layanan bimbingan, sehingga lebih praktis, terjangkau, dan mudah diakses oleh jamaah. Hal ini menjadi bagian dari upaya meningkatkan kualitas pelayanan yang profesional dan berkelanjutan.
+Seiring perkembangan zaman, KBIHU Arafah Muhammadiyah Klaten juga mengadopsi transformasi digital dalam memberikan layanan bimbingan, sehingga lebih praktis, terjangkau, dan mudah diakses oleh jamaah. Hal ini menjadi bagian dari upaya meningkatkan kualitas pelayanan yang profesional and berkelanjutan.
 
 Saat ini, KBIHU Arafah Muhammadiyah Klaten dipimpin oleh Dr. dr. H. Husen Prabowo, M.Kes, yang terus mendorong inovasi dan penguatan pelayanan demi mewujudkan jamaah yang mandiri, berilmu, dan meraih haji mabrur.`,
-  galeri: ['https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
+  galeri: ['https://www.youtube.com/watch?v=zcgRIpUf6S0'],
   agenda: [
     { tanggal: '2024-05-20', kegiatan: 'Manasik Haji Ke-5' },
     { tanggal: '2024-06-01', kegiatan: 'Pelepasan Jemaah' }
@@ -89,15 +89,15 @@ Saat ini, KBIHU Arafah Muhammadiyah Klaten dipimpin oleh Dr. dr. H. Husen Prabow
     { id: '3', judul: 'File PDF Manasik', link: '#', tipe: 'download' }
   ],
   sosmed: {
-    ig: 'kbihu_arafah_klaten',
-    tiktok: 'kbihu_arafah',
-    yt: 'KBIHU Arafah Official'
+    ig: 'arafahklaten',
+    tiktok: 'arafahklaten',
+    yt: '@arafahklaten'
   },
   kontak: {
-    wa1: '081234567890',
-    wa2: '085777888999',
-    alamat: 'Jl. Pemuda No. 123, Klaten',
-    peta: 'https://maps.google.com'
+    wa1: '6285225881780',
+    wa2: '6285225881780',
+    alamat: 'Dadimulyo, Gergunung, Klaten Utara, Klaten, jawa Tengah',
+    peta: 'https://maps.app.goo.gl/iY1dhxG4RfydVYnC8'
   },
   pengumuman: 'Diberitahukan kepada seluruh jemaah untuk segera melengkapi dokumen paspor.',
   perlengkapan: [
@@ -627,7 +627,10 @@ export async function saveAdminContent(content: AdminContent) {
       ...sanitized,
       updatedAt: serverTimestamp()
     }).catch(e => handleFirestoreError(e, 'write', 'settings/admin_content'));
+    
     saveStorage('admin_content', content);
+    cachedAdminContent = content; // Update local cache
+    lastContentFetchTime = Date.now();
   } catch (e) {
     console.error("Error saving admin content to Firebase:", e);
     saveStorage('admin_content', content);
