@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, cloneElement, ReactElement } from 'react';
+import React, { useState, useEffect, useMemo, cloneElement, ReactElement } from 'react';
 import { 
   Users, LayoutDashboard, Settings, Search, 
   Filter, X, Download, Plus, Trash2, 
@@ -7,7 +7,7 @@ import {
   UserPlus, UserCog, UserMinus, ShieldCheck,
   ChevronDown, ChevronUp, Clock, History,
   Database, Share2, Youtube, Instagram, MapPin,
-  Smartphone, FileText, Video, Heart, Stethoscope,
+  Smartphone, FileText, Video, Heart, Stethoscope, Play,
   Wind, Map, Shield, MoreVertical, Key, Banknote,
   LogOut, Menu, Calendar, RefreshCw, BookOpen, AlertTriangle, Loader2
 } from 'lucide-react';
@@ -220,7 +220,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
     
     setIsBulkDeleting(true);
     try {
-      await Promise.all(Array.from(selectedRegs).map(id => deleteRegistration(id)));
+      await Promise.all(Array.from(selectedRegs as Set<string>).map(id => deleteRegistration(id)));
       setRegistrations(prev => prev.filter(r => !selectedRegs.has(r.id)));
       setSelectedRegs(new Set());
       showToast(`${selectedRegs.size} pendaftar berhasil dihapus`);
@@ -827,9 +827,9 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                 </div>
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                  <FilterSelect label="Kloter" value={filters.kloter} options={[...new Set(jemaah.map(j => j.kloter).filter(Boolean))]} onChange={(v) => setFilters({...filters, kloter: v})} />
-                  <FilterSelect label="Rombongan" value={filters.rombongan} options={[...new Set(jemaah.map(j => j.rombongan).filter(Boolean))]} onChange={(v) => setFilters({...filters, rombongan: v})} />
-                  <FilterSelect label="Ketua Rombongan" value={filters.karom} options={[...new Set(jemaah.map(j => j.namaKetuaRombongan).filter(Boolean))]} onChange={(v) => setFilters({...filters, karom: v})} />
+                  <FilterSelect label="Kloter" value={filters.kloter} options={[...new Set(jemaah.map(j => j.kloter).filter(Boolean))] as string[]} onChange={(v) => setFilters({...filters, kloter: v})} />
+                  <FilterSelect label="Rombongan" value={filters.rombongan} options={[...new Set(jemaah.map(j => j.rombongan).filter(Boolean))] as string[]} onChange={(v) => setFilters({...filters, rombongan: v})} />
+                  <FilterSelect label="Ketua Rombongan" value={filters.karom} options={[...new Set(jemaah.map(j => j.namaKetuaRombongan).filter(Boolean))] as string[]} onChange={(v) => setFilters({...filters, karom: v})} />
                   <FilterSelect label="Jenis Kelamin" value={filters.jk} options={['L', 'P']} onChange={(v) => setFilters({...filters, jk: v})} />
                   <FilterSelect label="Murur" value={filters.murur} options={['YA', 'TIDAK']} onChange={(v) => setFilters({...filters, murur: v})} />
                   <FilterSelect label="Tanazul" value={filters.tanazul} options={['YA', 'TIDAK']} onChange={(v) => setFilters({...filters, tanazul: v})} />
@@ -1835,6 +1835,31 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                             className="w-full bg-white border border-neutral-200 rounded-xl py-3 pl-12 pr-4 text-xs font-bold focus:ring-4 focus:ring-primary/10 outline-none transition-all"
                           />
                         </div>
+
+                        {/* Thumbnail Preview */}
+                        {(() => {
+                          const getYoutubeId = (url: string) => {
+                            if (!url) return null;
+                            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                            const match = url.match(regExp);
+                            return (match && match[2].length === 11) ? match[2] : null;
+                          };
+                          const videoId = getYoutubeId(link);
+                          if (!videoId) return null;
+                          return (
+                            <div className="mt-3 relative aspect-video rounded-xl overflow-hidden border border-neutral-200 group">
+                              <img 
+                                src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`} 
+                                alt="Thumbnail Preview"
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Play className="w-8 h-8 text-white fill-white" />
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     ))}
                   </div>

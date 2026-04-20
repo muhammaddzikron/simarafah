@@ -65,3 +65,8 @@
     @apply bg-white rounded-xl border border-neutral-100 shadow-sm p-4 overflow-hidden;
   }
 }
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}

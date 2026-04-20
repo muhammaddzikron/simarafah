@@ -27,6 +27,8 @@ export interface Jemaah {
   waPendamping: string;
   hotelMekah: string;
   linkPetaHotel: string;
+  hotelMadinah?: string;
+  linkPetaHotelMadinah?: string;
   nomorPorsi?: string;
   keteranganKhusus?: string; // Health info
   waPetugas?: string;

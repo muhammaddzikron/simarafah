@@ -267,6 +267,8 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
               waPendamping: 27, // AB
               hotel: 31, // AF
               peta: 32, // AG
+              hotelMadinah: 33, // AH
+              petaMadinah: 34, // AI
               paspor: 6, // G
               visa: 7 // H
             };
@@ -311,6 +313,8 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
                   waPendamping: g(idx.waPendamping),
                   hotelMekah: g(idx.hotel),
                   linkPetaHotel: g(idx.peta),
+                  hotelMadinah: g(idx.hotelMadinah),
+                  linkPetaHotelMadinah: g(idx.petaMadinah),
                   nomorPorsi: g(idx.porsi),
                   keteranganKhusus: g(34),
                   paspor: g(idx.paspor),

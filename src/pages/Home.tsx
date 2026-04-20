@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useState, useEffect, useRef, useMemo, cloneElement, ReactElement } from 'react';
+import { useState, useEffect, useRef, useMemo, cloneElement, ReactElement, ReactNode } from 'react';
 import { 
   UserCircle, Video, Calendar, BookOpen, 
   Share2, Contact, ChevronRight, MapPin,
@@ -451,7 +451,9 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
     const materiMatches = (content?.materi || []).filter(m => 
       m.judul.toLowerCase().includes(query) ||
       m.isi?.terjemahan?.toLowerCase().includes(query) ||
-      m.isi?.latin?.toLowerCase().includes(query)
+      m.isi?.latin?.toLowerCase().includes(query) ||
+      m.isi?.konten?.toLowerCase().includes(query) ||
+      m.tipe.toLowerCase().includes(query)
     ).map(m => ({ ...m, searchType: 'materi' as const }));
 
     // Combine and limit
@@ -459,7 +461,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
   }, [jemaah, content, searchQuery]);
 
   // Sub-view component for consistent styling
-  const ViewHeader = ({ title, icon }: { title: string, icon: React.ReactNode }) => (
+  const ViewHeader = ({ title, icon }: { title: string, icon: ReactNode }) => (
     <div className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-100">
       <div className="flex items-center gap-4">
         <button 
@@ -644,6 +646,201 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                           className="flex items-center justify-center gap-3 w-full py-4 bg-primary text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 transition-all active:scale-95"
                         >
                           <MapPin className="w-4 h-4" /> Buka Peta Hotel (GPS)
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeView === 'data_pribadi_full' && currentUserData && (
+            <>
+              <ViewHeader title="Data Pribadi Saya" icon={<UserCircle className="w-5 h-5" />} />
+              <div className="space-y-6">
+                {/* Special Header Box: Nama Lengkap */}
+                <div className="bg-emerald-600 rounded-[32px] p-8 text-center relative overflow-hidden shadow-xl shadow-emerald-100">
+                  <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <UserCircle className="w-24 h-24 text-white" />
+                  </div>
+                  <div className="relative z-10 space-y-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-[9px] font-black text-white uppercase tracking-widest italic border border-white/10">
+                      IDENTITAS JEMAAH HAJI
+                    </div>
+                    <h3 className="text-2xl font-black text-white uppercase tracking-tight italic drop-shadow-md">
+                      {currentUserData.namaLengkap}
+                    </h3>
+                    <p className="text-[10px] font-bold text-emerald-200 tracking-[0.2em] uppercase">No. Porsi: {currentUserData.nomorPorsi}</p>
+                  </div>
+                </div>
+
+                {/* Section 1: Data Pokok */}
+                <div className="grid grid-cols-2 gap-4">
+                  <DetailItem label="Nomor (A)" value={currentUserData.no} />
+                  <DetailItem label="Kloter (B)" value={currentUserData.kloter} />
+                  <DetailItem label="Rombongan (C)" value={currentUserData.rombongan} />
+                  <DetailItem label="Masuk Asrama (D)" value={currentUserData.jadwalMasukAsrama} />
+                </div>
+
+                {/* Section 2: Ketua Rombongan (Karom) */}
+                <div className="bg-amber-50/50 rounded-[32px] p-6 border border-amber-100 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-amber-600 shadow-sm border border-amber-100 italic font-black text-lg">
+                      {currentUserData.rombongan}
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest leading-none mb-1">Ketua Rombongan (E)</p>
+                      <p className="text-md font-black text-neutral-800 uppercase tracking-tight leading-tight">{currentUserData.namaKetuaRombongan || '-'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-amber-100">
+                    <div className="space-y-0.5">
+                      <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest leading-none">WhatsApp Karom (AC)</p>
+                      <p className="text-xs font-bold text-amber-600">{currentUserData.waKarom || '-'}</p>
+                    </div>
+                    {currentUserData.waKarom && (
+                      <div className="flex gap-2">
+                        <a href={`https://wa.me/${formatWA(currentUserData.waKarom)}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase shadow-lg shadow-emerald-100 transition-all active:scale-95">
+                          <Smartphone className="w-4 h-4" /> WA
+                        </a>
+                        <a href={`tel:${currentUserData.waKarom.replace(/[^0-9]/g, '')}`} className="p-2.5 bg-amber-500 text-white rounded-xl shadow-lg shadow-amber-100 transition-all active:scale-95">
+                          <Phone className="w-4 h-4" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section 3: Data Fisik & Kontak */}
+                <div className="grid grid-cols-2 gap-4">
+                  <DetailItem label="Umur (J)" value={`${currentUserData.umur} Tahun`} />
+                  <DetailItem label="Jenis Kelamin (K)" value={currentUserData.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan'} />
+                  <DetailItem label="Paspor (G)" value={currentUserData.paspor} />
+                  <DetailItem label="Visa (H)" value={currentUserData.visa} />
+                  <div className="col-span-2">
+                    <div className="p-5 bg-neutral-50 rounded-[28px] border border-neutral-100 italic space-y-2">
+                      <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest leading-none">Alamat Lengkap (L,M,N,O)</p>
+                      <p className="text-xs font-bold text-neutral-700 leading-relaxed uppercase">
+                        {currentUserData.alamat}, {currentUserData.desa}, {currentUserData.kecamatan}, {currentUserData.kabupaten}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 4: Kontak Jemaah */}
+                <div className="bg-blue-50/50 rounded-[32px] p-6 border border-blue-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-1">WhatsApp Saya (P)</p>
+                    <p className="text-md font-black text-neutral-800 tracking-tight">{currentUserData.wa || '-'}</p>
+                  </div>
+                  {currentUserData.wa && (
+                    <div className="flex gap-2">
+                      <a href={`tel:${currentUserData.wa.replace(/[^0-9]/g, '')}`} className="p-3 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-100 transition-all active:scale-95">
+                        <Phone className="w-5 h-5" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {/* Section 5: Status Layanan */}
+                <div className="grid grid-cols-2 gap-3">
+                  <DetailItem label="Tanazul (Q)" value={currentUserData.tanazul} />
+                  <DetailItem label="Murur (R)" value={currentUserData.murur} />
+                  <DetailItem label="Nafar (S)" value={currentUserData.nafar} />
+                  <DetailItem label="Jalur DAM (T)" value={currentUserData.jalurDam} />
+                  <DetailItem label="Umrah Gel (U)" value={currentUserData.umrahGelombang} />
+                  <DetailItem label="Badal (V)" value={currentUserData.badal} />
+                </div>
+
+                {/* Section 6: Kesehatan (W, X, Y, Z) */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 px-1">
+                    <div className="w-1.5 h-1.5 bg-rose-500 rounded-full" />
+                    <h4 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Informasi Kesehatan</h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <HealthBadge label="Kursi Roda (W)" active={currentUserData.kursiRoda === 'YA'} />
+                    <HealthBadge label="Tongkat/Kruk (X)" active={currentUserData.tongkat === 'YA'} />
+                    <HealthBadge label="Pen Tubuh (Y)" active={currentUserData.penTubuh === 'YA'} />
+                    <HealthBadge label="Ring Jantung (Z)" active={currentUserData.ringJantung === 'YA'} />
+                  </div>
+                </div>
+
+                {/* Section 7: Pendamping (AA, AB) */}
+                <div className="bg-purple-50 rounded-[32px] p-6 border border-purple-100 space-y-4 shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-purple-600 shadow-sm border border-purple-100">
+                      <UserPlus className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-purple-500 uppercase tracking-widest leading-none mb-1">Pendamping Lansia (AA)</p>
+                      <p className="text-md font-black text-neutral-800 uppercase tracking-tight leading-tight">{currentUserData.pendampingLansia || '-'}</p>
+                    </div>
+                  </div>
+                  {currentUserData.waPendamping && (
+                    <div className="flex items-center justify-between pt-4 border-t border-purple-100">
+                      <div className="space-y-0.5">
+                        <p className="text-[9px] font-black text-purple-400 uppercase tracking-widest leading-none">WA Pendamping (AB)</p>
+                        <p className="text-xs font-bold text-purple-600">{currentUserData.waPendamping}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <a href={`https://wa.me/${formatWA(currentUserData.waPendamping)}`} target="_blank" rel="noreferrer" className="p-3 bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-95">
+                          <Smartphone className="w-4 h-4" />
+                        </a>
+                        <a href={`tel:${currentUserData.waPendamping.replace(/[^0-9]/g, '')}`} className="p-3 bg-purple-600 text-white rounded-xl shadow-lg shadow-purple-100 transition-all active:scale-95">
+                          <Phone className="w-4 h-4" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Section 8: Hotel Mekah & Madinah (AF, AG, AH, AI) */}
+                <div className="space-y-4">
+                  <div className="bg-indigo-600 rounded-[40px] p-8 shadow-xl shadow-indigo-100 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
+                      <MapPin className="w-24 h-24 text-white" />
+                    </div>
+                    <div className="relative z-10 space-y-6">
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest italic flex items-center gap-2">
+                          <MapPin className="w-3 h-3" /> Hotel Makkah (AF)
+                        </p>
+                        <h4 className="text-xl font-black text-white italic tracking-tight leading-tight">{currentUserData.hotelMekah || 'Menunggu Update'}</h4>
+                      </div>
+                      {currentUserData.linkPetaHotel && (
+                        <a 
+                          href={currentUserData.linkPetaHotel} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="flex items-center justify-center gap-2 w-full py-5 bg-white text-indigo-600 rounded-[24px] text-[12px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95 hover:bg-neutral-50"
+                        >
+                          <MapIcon className="w-4 h-4" /> Buka Penunjuk Peta (AG)
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-600 rounded-[40px] p-8 shadow-xl shadow-amber-100 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform">
+                      <MapPin className="w-24 h-24 text-white" />
+                    </div>
+                    <div className="relative z-10 space-y-6">
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black text-amber-200 uppercase tracking-widest italic flex items-center gap-2">
+                          <MapPin className="w-3 h-3" /> Hotel Madinah (AH)
+                        </p>
+                        <h4 className="text-xl font-black text-white italic tracking-tight leading-tight">{currentUserData.hotelMadinah || 'Menunggu Update'}</h4>
+                      </div>
+                      {currentUserData.linkPetaHotelMadinah && (
+                        <a 
+                          href={currentUserData.linkPetaHotelMadinah} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="flex items-center justify-center gap-2 w-full py-5 bg-white text-amber-600 rounded-[24px] text-[12px] font-black uppercase tracking-widest shadow-xl transition-all active:scale-95 hover:bg-neutral-50"
+                        >
+                          <MapIcon className="w-4 h-4" /> Buka Penunjuk Peta (AI)
                         </a>
                       )}
                     </div>
@@ -845,26 +1042,54 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                     <Youtube className="w-4 h-4 text-red-600" />
                     <h4 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Dokumentasi Video</h4>
                   </div>
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-6">
                     {content?.galeri && content.galeri.length > 0 ? (
                       content.galeri.map((link, i) => {
-                        let embedLink = link;
-                        if (link.includes('youtube.com/watch?v=')) {
-                          embedLink = link.replace('watch?v=', 'embed/');
-                        } else if (link.includes('youtu.be/')) {
-                          const id = link.split('youtu.be/')[1].split('?')[0];
-                          embedLink = `https://www.youtube.com/embed/${id}`;
-                        }
+                        const getYoutubeId = (url: string) => {
+                          if (!url) return null;
+                          const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                          const match = url.match(regExp);
+                          return (match && match[2].length === 11) ? match[2] : null;
+                        };
+
+                        const videoId = getYoutubeId(link);
+                        const embedLink = videoId ? `https://www.youtube.com/embed/${videoId}` : link;
                         
                         return (
-                          <div key={i} className="aspect-video bg-neutral-900 rounded-3xl overflow-hidden shadow-lg border border-neutral-100 group">
-                            <iframe 
-                              src={embedLink} 
-                              className="w-full h-full border-none"
-                              allowFullScreen
-                              title={`Video Dokumentasi ${i+1}`}
-                            />
-                          </div>
+                          <motion.div 
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.1 }}
+                            className="bg-white rounded-[32px] border border-neutral-100 p-6 shadow-sm space-y-4"
+                          >
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-black text-neutral-800 italic">Video Dokumentasi #{i+1}</h4>
+                              <Youtube className="w-5 h-5 text-red-600" />
+                            </div>
+
+                            <div className="bg-neutral-50 rounded-2xl p-3 flex items-center gap-3 border border-neutral-100/50">
+                              <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                                <Youtube className="w-4 h-4" />
+                              </div>
+                              <p className="text-[10px] font-bold text-neutral-400 truncate flex-1">{link}</p>
+                            </div>
+
+                            <div className="aspect-video bg-neutral-900 rounded-3xl overflow-hidden shadow-inner border border-neutral-100">
+                              {videoId ? (
+                                <iframe 
+                                  src={embedLink} 
+                                  className="w-full h-full border-none"
+                                  allowFullScreen
+                                  title={`Video Dokumentasi ${i+1}`}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-white/50 text-[10px] font-bold uppercase tracking-widest">
+                                  Invalid YouTube Link
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
                         );
                       })
                     ) : (
@@ -999,13 +1224,15 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                             {(m.tipe === 'video') && (
                               <div className="space-y-4">
                                 {(() => {
-                                  let embedLink = m.link || '';
-                                  if (embedLink.includes('youtube.com/watch?v=')) {
-                                    embedLink = embedLink.replace('watch?v=', 'embed/');
-                                  } else if (embedLink.includes('youtu.be/')) {
-                                    const id = embedLink.split('youtu.be/')[1].split('?')[0];
-                                    embedLink = `https://www.youtube.com/embed/${id}`;
-                                  }
+                                  const getYoutubeId = (url: string) => {
+                                    if (!url) return null;
+                                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                                    const match = url.match(regExp);
+                                    return (match && match[2].length === 11) ? match[2] : null;
+                                  };
+
+                                  const videoId = getYoutubeId(m.link || '');
+                                  const embedLink = videoId ? `https://www.youtube.com/embed/${videoId}` : (m.link || '');
                                   
                                   if (!embedLink || embedLink === '#') return (
                                     <div className="p-8 text-center bg-neutral-50 rounded-2xl border border-dashed border-neutral-200">
@@ -1014,13 +1241,21 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                                   );
 
                                   return (
-                                    <div className="aspect-video bg-neutral-900 rounded-2xl overflow-hidden shadow-lg border border-neutral-100">
-                                      <iframe 
-                                        src={embedLink} 
-                                        className="w-full h-full border-none"
-                                        allowFullScreen
-                                        title={m.judul}
-                                      />
+                                    <div className="space-y-4">
+                                      <div className="bg-neutral-50 rounded-2xl p-3 flex items-center gap-3 border border-neutral-100/50">
+                                        <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                                          <Youtube className="w-4 h-4" />
+                                        </div>
+                                        <p className="text-[10px] font-bold text-neutral-400 truncate flex-1">{m.link}</p>
+                                      </div>
+                                      <div className="aspect-video bg-neutral-900 rounded-2xl overflow-hidden shadow-lg border border-neutral-100">
+                                        <iframe 
+                                          src={embedLink} 
+                                          className="w-full h-full border-none"
+                                          allowFullScreen
+                                          title={m.judul}
+                                        />
+                                      </div>
                                     </div>
                                   );
                                 })()}
@@ -1205,7 +1440,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
       ) : null}
 
       {/* B. SEARCH SECTION */}
-      {(user?.role !== 'jemaah') && (
+      {(!user || user.role !== 'jemaah') && (
         <section className="space-y-4">
           <h2 className="text-xs font-black text-emerald-800 uppercase tracking-widest text-center">PENCARIAN JEMAAH</h2>
           <div className="relative group">
@@ -1408,21 +1643,53 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                   </motion.div>
                 ))}
                 {searchResults.filter(j => j.searchType === 'materi').map((m: any, i) => (
-                  <div key={`m-${i}`} className="bg-white rounded-2xl border border-neutral-100 p-4 flex items-center justify-between shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <BookOpen className="w-5 h-5 text-indigo-500" />
-                      <div>
-                        <p className="text-sm font-black text-neutral-800">{m.judul}</p>
-                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{m.tipe}</p>
+                  <motion.div 
+                    key={`m-${i}`}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="bg-white rounded-[24px] border border-neutral-100 p-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner",
+                        m.tipe === 'doa' ? "bg-emerald-50 text-emerald-600" :
+                        m.tipe === 'video' ? "bg-rose-50 text-rose-600" :
+                        m.tipe === 'download' ? "bg-amber-50 text-amber-600" :
+                        "bg-indigo-50 text-indigo-600"
+                      )}>
+                        {m.tipe === 'doa' ? <Heart className="w-6 h-6" /> :
+                         m.tipe === 'video' ? <Play className="w-6 h-6" /> :
+                         m.tipe === 'download' ? <Download className="w-6 h-6" /> :
+                         <FileText className="w-6 h-6" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-[0.1em] mb-1 opacity-40">
+                          {m.tipe === 'teks' ? 'Artikel' : m.tipe}
+                        </p>
+                        <h4 className="text-sm font-black text-neutral-800 truncate pr-2 italic">
+                          {m.judul}
+                        </h4>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => setActiveView('materi')}
-                      className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"
-                    >
-                      <ArrowRightLeft className="w-4 h-4" />
-                    </button>
-                  </div>
+                    <div className="flex gap-2">
+                       {m.link && (
+                         <a 
+                           href={m.link} 
+                           target="_blank" 
+                           rel="noreferrer"
+                           className="w-10 h-10 bg-neutral-50 text-neutral-400 rounded-xl flex items-center justify-center border border-neutral-100"
+                         >
+                           <ExternalLink className="w-4 h-4" />
+                         </a>
+                       )}
+                       <button 
+                        onClick={() => setActiveView('materi')}
+                        className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center border border-primary/20"
+                      >
+                        <ArrowRightLeft className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </motion.div>
                 ))}
 
                 {searchResults.length === 0 && searchQuery.length > 2 && (
@@ -1434,54 +1701,56 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
         </section>
       )}
 
-      {/* C. NAVIGATION MENU */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-center gap-3">
-           <div className="h-4 w-1 bg-primary rounded-full" />
-           <h2 className="text-xs font-black text-neutral-800 uppercase tracking-widest text-center">Menu Layanan Arafah</h2>
-           <div className="h-4 w-1 bg-primary rounded-full" />
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { id: 'profil', icon: <BookOpen />, label: 'Profil KBIHU', color: 'bg-blue-50 text-blue-600' },
-            { id: 'galeri', icon: <Video />, label: 'Dokumentasi', color: 'bg-rose-50 text-rose-600' },
-            { id: 'agenda', icon: <Calendar />, label: 'Kegiatan', color: 'bg-orange-50 text-orange-600' },
-            { id: 'materi', icon: <BookOpen />, label: 'Manasik', color: 'bg-indigo-50 text-indigo-600' },
-            { id: 'sosmed', icon: <Share2 />, label: 'Media Sosial', color: 'bg-sky-50 text-sky-600' },
-            { id: 'kontak', icon: <Phone />, label: 'Bantuan', color: 'bg-emerald-50 text-emerald-600' },
-          ].map((item, idx) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveView(item.id)}
-              className="bg-white p-4 rounded-[24px] border border-neutral-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all"
-            >
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", item.color)}>
-                {cloneElement(item.icon as ReactElement<any>, { className: "w-5 h-5" })}
-              </div>
-              <span className="text-[9px] font-black text-neutral-600 uppercase text-center leading-tight">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      </section>
+      {/* C. NAVIGATION MENU - GUEST / ADMIN ONLY */}
+      {(!user || user.role !== 'jemaah') && (
+        <section className="space-y-6">
+          <div className="flex items-center justify-center gap-3">
+             <div className="h-4 w-1 bg-primary rounded-full" />
+             <h2 className="text-xs font-black text-neutral-800 uppercase tracking-widest text-center">Menu Layanan Arafah</h2>
+             <div className="h-4 w-1 bg-primary rounded-full" />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { id: 'profil', icon: <BookOpen />, label: 'Profil KBIHU', color: 'bg-blue-50 text-blue-600' },
+              { id: 'galeri', icon: <Video />, label: 'Dokumentasi', color: 'bg-rose-50 text-rose-600' },
+              { id: 'agenda', icon: <Calendar />, label: 'Kegiatan', color: 'bg-orange-50 text-orange-600' },
+              { id: 'materi', icon: <BookOpen />, label: 'Manasik', color: 'bg-indigo-50 text-indigo-600' },
+              { id: 'sosmed', icon: <Share2 />, label: 'Media Sosial', color: 'bg-sky-50 text-sky-600' },
+              { id: 'kontak', icon: <Phone />, label: 'Bantuan', color: 'bg-emerald-50 text-emerald-600' },
+            ].map((item, idx) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveView(item.id)}
+                className="bg-white p-4 rounded-[24px] border border-neutral-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all"
+              >
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", item.color)}>
+                  {cloneElement(item.icon as ReactElement<any>, { className: "w-5 h-5" })}
+                </div>
+                <span className="text-[9px] font-black text-neutral-600 uppercase text-center leading-tight">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* D. JEMAAH CONTENT (Checklist / Billing) - Only for Logged In Jemaah */}
+      {/* D. JEMAAH CONTENT (Dashboard) - Only for Logged In Jemaah */}
       {user?.role === 'jemaah' && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="space-y-8"
+          className="space-y-6"
         >
-          {/* Section: Ringkasan Tagihan & Keuangan (High Priority) */}
+          {/* Panel 1: Ringkasan Tagihan & Keuangan */}
           <section className="bg-white rounded-[40px] border border-neutral-100 shadow-xl shadow-neutral-100 overflow-hidden">
-            <div className="bg-orange-500 p-6 flex items-center justify-between text-white">
+            <div className="bg-orange-600 p-6 flex items-center justify-between text-white">
               <div className="flex items-center gap-3">
                 <Banknote className="w-5 h-5 text-orange-200" />
                 <h2 className="text-sm font-black uppercase tracking-widest">Ringkasan Tagihan & Keuangan</h2>
               </div>
             </div>
-            <div className="p-4 space-y-3">
+            <div className="p-5 space-y-3">
               {content?.pembayaran.map((p, i) => (
-                <div key={i} className="bg-white border border-neutral-100 rounded-3xl p-5 space-y-3 shadow-sm relative overflow-hidden group">
+                <div key={i} className="bg-neutral-50/50 border border-neutral-100 rounded-3xl p-5 space-y-3 relative overflow-hidden group">
                   <div className="flex items-center justify-between">
                     <h3 className="text-[11px] font-black text-neutral-800 uppercase tracking-tight">{p.jenis}</h3>
                     <div className={cn(
@@ -1493,18 +1762,18 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-0.5">
-                      <p className="text-[8px] font-bold text-neutral-400 uppercase">Target</p>
+                      <p className="text-[8px] font-bold text-neutral-400 uppercase">Target Tagihan</p>
                       <p className="text-xs font-black">Rp {p.total.toLocaleString('id-ID')}</p>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-[8px] font-bold text-neutral-400 uppercase">Dibayar</p>
+                      <p className="text-[8px] font-bold text-neutral-400 uppercase">Sudah Dibayar</p>
                       <p className="text-xs font-black text-emerald-600">Rp {p.dibayar.toLocaleString('id-ID')}</p>
                     </div>
                   </div>
                   {p.total > p.dibayar && (
-                    <div className="pt-2 border-t border-neutral-50 flex justify-between items-center text-xs">
-                      <span className="font-bold text-neutral-400 uppercase text-[9px]">Sisa</span>
-                      <span className="font-black text-rose-600">Rp {(p.total - p.dibayar).toLocaleString('id-ID')}</span>
+                    <div className="pt-3 mt-1 border-t border-neutral-200/50 flex justify-between items-center">
+                      <span className="font-bold text-neutral-400 uppercase text-[9px]">Sisa Pelunasan</span>
+                      <span className="font-black text-rose-600 text-xs">Rp {(p.total - p.dibayar).toLocaleString('id-ID')}</span>
                     </div>
                   )}
                 </div>
@@ -1512,54 +1781,78 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
             </div>
           </section>
 
-          {/* Section: Status Kesiapan (Checklist) */}
+          {/* Panel 2: Prosentase Kesiapan Berangkat */}
           <section className="bg-white rounded-[40px] border border-neutral-100 shadow-xl shadow-neutral-100 overflow-hidden">
             <div className="bg-emerald-600 p-6 flex items-center justify-between text-white">
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-200" />
+                <TrendingUp className="w-5 h-5 text-emerald-200" />
                 <h2 className="text-sm font-black uppercase tracking-widest">Kesiapan Berangkat</h2>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="text-[10px] font-black bg-emerald-900/30 px-3 py-1.5 rounded-full border border-emerald-400/30 uppercase tracking-widest">
-                  {checklistCompletion}%
-                </span>
-                {syncStatus === 'quota-exceeded' && (
-                  <span className="text-[7px] font-black bg-amber-500/20 text-amber-200 px-2 py-0.5 rounded border border-amber-500/30 uppercase animate-pulse">
-                    ⚠️ Offline (Kuota Penuh)
-                  </span>
-                )}
-              </div>
+              <span className="text-sm font-black bg-emerald-900/30 px-4 py-2 rounded-2xl border border-emerald-400/30 uppercase tracking-widest italic">
+                {checklistCompletion}%
+              </span>
             </div>
             <div className="p-6 space-y-6">
-              <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">
+              <div className="h-4 bg-neutral-100 rounded-full overflow-hidden shadow-inner">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${checklistCompletion}%` }}
-                  className="h-full bg-emerald-500 shadow-lg"
-                />
+                  className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-lg relative"
+                >
+                  <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[shimmer_2s_linear_infinite]" />
+                </motion.div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: 'Paspor', value: currentUserData?.paspor || 'Proses' },
-                  { label: 'Visa', value: currentUserData?.visa || 'Proses' },
-                  { label: 'Hotel', value: currentUserData?.hotelMekah ? 'OK' : 'Proses' },
+                  { label: 'PASPOR', value: currentUserData?.paspor || 'Proses', color: 'text-blue-600' },
+                  { label: 'VISA', value: currentUserData?.visa || 'Proses', color: 'text-indigo-600' },
+                  { label: 'HOTEL', value: currentUserData?.hotelMekah ? 'OK' : 'Proses', color: 'text-emerald-600' },
                 ].map((item, idx) => (
-                  <div key={idx} className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-3 text-center">
-                    <p className="text-[7px] font-black text-neutral-400 uppercase mb-1">{item.label}</p>
-                    <p className="text-[9px] font-black text-emerald-700 uppercase">{item.value}</p>
+                  <div key={idx} className="bg-neutral-50/80 border border-neutral-100 rounded-2xl p-4 text-center">
+                    <p className="text-[8px] font-black text-neutral-400 uppercase mb-1.5 tracking-widest">{item.label}</p>
+                    <p className={cn("text-[10px] font-black uppercase tracking-tight", item.color)}>{item.value}</p>
                   </div>
                 ))}
               </div>
             </div>
           </section>
+
+          {/* Grid Menu Pribadi Jemaah */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-center gap-3">
+               <div className="h-4 w-1 bg-primary rounded-full" />
+               <h2 className="text-xs font-black text-neutral-800 uppercase tracking-widest text-center">Menu Akun Saya</h2>
+               <div className="h-4 w-1 bg-primary rounded-full" />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { id: 'data_pribadi_full', icon: <UserCircle />, label: 'Data Pribadi', color: 'bg-emerald-50 text-emerald-600' },
+                { id: 'checklist', icon: <CheckCircle2 />, label: 'Perlengkapan', color: 'bg-blue-50 text-blue-600' },
+                { id: 'payments', icon: <Banknote />, label: 'Keuangan', color: 'bg-orange-50 text-orange-600' },
+                { id: 'materi', icon: <BookOpen />, label: 'Materi', color: 'bg-indigo-50 text-indigo-600' },
+                { id: 'agenda', icon: <Calendar />, label: 'Agenda', color: 'bg-amber-50 text-amber-600' },
+                { id: 'kontak', icon: <Smartphone />, label: 'Bantuan', color: 'bg-rose-50 text-rose-600' },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveView(item.id)}
+                  className="bg-white p-4 rounded-[28px] border border-neutral-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all text-center"
+                >
+                  <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", item.color)}>
+                    {cloneElement(item.icon as ReactElement<any>, { className: "w-6 h-6" })}
+                  </div>
+                  <span className="text-[9px] font-black text-neutral-600 uppercase leading-tight tracking-tight">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
         </motion.div>
       )}
 
-      {/* E. LOGIN BUTTON (For Guests) - Removed as requested */}
-
-      {/* Shared Utilities (Visible to Everyone) */}
-      <section className="space-y-6 pt-6 border-t border-neutral-100">
+      {/* E. SHARED UTILITIES - LOGOUT ONLY */}
+      {(!user) && (
+        <section className="space-y-6 pt-6 border-t border-neutral-100">
         {/* Jam Dunia & Jadwal Salat */}
         <section className="bg-white rounded-[40px] border border-neutral-100 shadow-sm p-6 space-y-6">
           <div className="flex items-center justify-center gap-3">
@@ -1855,6 +2148,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
           </div>
         </section>
       </section>
+    )}
     </div>
   );
 }
