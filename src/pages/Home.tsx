@@ -1017,31 +1017,6 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
 
   return (
     <div className="px-5 py-6 space-y-8 pb-24">
-      {/* Welcome Header - Visible to All */}
-      <div className="flex items-center justify-between mb-2">
-        <div>
-          <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest leading-none">Ahlan wa Sahlan,</p>
-          <h1 className="text-lg font-black text-neutral-800 tracking-tight">{user?.nama || 'Tamu Jemaah'}</h1>
-        </div>
-        {user ? (
-          onLogout && (
-            <button 
-              onClick={onLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all active:scale-95"
-            >
-              <LogOut className="w-3.5 h-3.5" /> Log Out
-            </button>
-          )
-        ) : (
-          <button 
-            onClick={() => navigate('/login')}
-            className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full border border-primary/20 text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all active:scale-95"
-          >
-            Masuk <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
-
       {dbStatus === 'error' && (
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-[10px] font-bold text-amber-800 flex items-center gap-3">
           <RefreshCw className="w-4 h-4 text-amber-500 animate-spin" />
@@ -1067,8 +1042,19 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                       <p className="text-[10px] font-black text-emerald-200 uppercase tracking-[0.2em]">Data Jemaah</p>
                       <h2 className="text-xl font-black tracking-tight leading-tight">{currentUserData.namaLengkap}</h2>
                     </div>
-                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
-                      <UserCircle className="w-7 h-7" />
+                    <div className="flex items-center gap-3">
+                      {onLogout && (
+                        <button 
+                          onClick={onLogout}
+                          className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10 text-white/60 hover:text-white transition-colors"
+                          title="Keluar"
+                        >
+                          <LogOut className="w-5 h-5" />
+                        </button>
+                      )}
+                      <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 border border-white/10">
+                        <UserCircle className="w-7 h-7" />
+                      </div>
                     </div>
                   </div>
                   
@@ -1262,13 +1248,23 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
           {user && (
             <section className="bg-white rounded-[32px] p-6 border border-neutral-100 shadow-sm relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
-              <div className="relative z-10 space-y-1">
-                <p className="text-[12px] font-black text-neutral-400 uppercase tracking-[0.2em]">Assalamu'alaikum,</p>
-                <h2 className="text-2xl font-black text-primary tracking-tight leading-tight">{user.nama}</h2>
-                {(user.role === 'admin_petugas' || user.role === 'super_admin') && (
-                  <div className="mt-2 inline-block px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-tight border border-emerald-100">
-                    {user.role === 'super_admin' ? 'Super Admin' : 'Admin Pengurus'}
-                  </div>
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-[12px] font-black text-neutral-400 uppercase tracking-[0.2em]">Assalamu'alaikum,</p>
+                  <h2 className="text-2xl font-black text-primary tracking-tight leading-tight">{user.nama}</h2>
+                  {(user.role === 'admin_petugas' || user.role === 'super_admin') && (
+                    <div className="mt-2 inline-block px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-tight border border-emerald-100">
+                      {user.role === 'super_admin' ? 'Super Admin' : 'Admin Pengurus'}
+                    </div>
+                  )}
+                </div>
+                {onLogout && (
+                  <button 
+                    onClick={onLogout}
+                    className="p-3 bg-rose-50 text-rose-600 rounded-2xl border border-rose-100 active:scale-95 transition-all shadow-sm"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </button>
                 )}
               </div>
             </section>
