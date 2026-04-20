@@ -6,6 +6,7 @@ import firebaseConfig from '../../firebase-applet-config.json';
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
+export const dbDefault = getFirestore(app, '(default)');
 
 /**
  * Interface and handler for rich Firestore error reporting.

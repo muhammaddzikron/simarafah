@@ -16,7 +16,7 @@ import { GoogleGenAI } from "@google/genai";
 import { fetchJemaah, getAdminContent } from '../services/api';
 import { cn } from '../lib/utils';
 import { Phone } from 'lucide-react';
-import { db } from '../lib/firebase';
+import { db, dbDefault } from '../lib/firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const getAI = () => {
@@ -168,7 +168,17 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
       const loadChecklist = async () => {
         try {
           const docRef = doc(db, 'checklists', user.porsi!);
-          const docSnap = await getDoc(docRef);
+          let docSnap = await getDoc(docRef);
+          
+          if (!docSnap.exists()) {
+            const legacyRef = doc(dbDefault, 'checklists', user.porsi!);
+            const legacySnap = await getDoc(legacyRef);
+            if (legacySnap.exists()) {
+                docSnap = legacySnap;
+                console.log("Checklist recovered from legacy (default) database.");
+            }
+          }
+
           if (docSnap.exists()) {
             setUserChecklist(docSnap.data().checkedItems || {});
           }
@@ -1522,18 +1532,29 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                           >
                             <div className={cn(
                               "p-4 flex items-center justify-between",
-                              m.tipe === 'doa' ? "bg-amber-50/30" : (m.tipe === 'video' ? "bg-rose-50/30" : "bg-blue-50/30")
+                              m.tipe === 'doa' ? "bg-amber-50/30" : (m.tipe === 'video' ? "bg-rose-50/30" : (m.tipe === 'teks' ? "bg-indigo-50/30" : "bg-blue-50/30"))
                             )}>
                               <div className="flex items-center gap-3">
                                 {m.tipe === 'doa' && <Heart className="w-4 h-4 text-amber-600" />}
+                                {m.tipe === 'teks' && <BookOpen className="w-4 h-4 text-indigo-600" />}
                                 {m.tipe === 'video' && <Video className="w-4 h-4 text-rose-600" />}
                                 {m.tipe === 'download' && <Download className="w-4 h-4 text-blue-600" />}
                                 <span className="text-xs font-black text-neutral-800 tracking-tight">{m.judul}</span>
                               </div>
-                              <span className="text-[9px] font-black uppercase tracking-widest opacity-50">{m.tipe}</span>
+                              <span className="text-[9px] font-black uppercase tracking-widest opacity-50">
+                                {m.tipe === 'teks' ? 'Artikel' : (m.tipe === 'download' ? 'Drive' : m.tipe)}
+                              </span>
                             </div>
 
                             <div className="p-6">
+                              {m.tipe === 'teks' && m.isi?.konten && (
+                                <div className="p-4 bg-neutral-50/50 rounded-2xl border border-neutral-100/50">
+                                  <p className="text-sm font-medium text-neutral-600 leading-relaxed line-clamp-4">
+                                    {m.isi.konten}
+                                  </p>
+                                </div>
+                              )}
+
                               {m.tipe === 'doa' && m.isi && (
                                 <div className="space-y-4">
                                   <p className="text-4xl font-arabic text-neutral-800 text-right leading-loose" dir="rtl">{m.isi.arab}</p>

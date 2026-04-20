@@ -1,6 +1,6 @@
-import { Jemaah, AdminContent, User, PaymentData, UserRole, Registration } from '../types';
+import { Jemaah, AdminContent, User, PaymentData, UserRole, Registration, MateriItem } from '../types';
 import Papa from 'papaparse';
-import { db, auth, handleFirestoreError } from '../lib/firebase';
+import { db, dbDefault, auth, handleFirestoreError } from '../lib/firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, getDocs, query, orderBy, deleteDoc, updateDoc } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
 
@@ -286,14 +286,46 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
     }
 
     // 2. Fallback to Firestore if Spreadsheet fail
-    const docRef = doc(db, 'settings', 'jemaah_data');
-    const docSnap = await getDoc(docRef).catch(e => {
-        console.warn("Firestore jemaah_data fetch failed:", e);
-        return null;
-    });
-    if (docSnap && docSnap.exists()) {
-      return docSnap.data().jemaah || [];
+    const possiblePaths = [
+      { db: db, path: ['settings', 'jemaah_data'], label: 'DB-Config: settings/jemaah_data' },
+      { db: db, path: ['jemaah_data'], label: 'DB-Config: root/jemaah_data' },
+      { db: dbDefault, path: ['settings', 'jemaah_data'], label: 'DB-Default: settings/jemaah_data' },
+      { db: dbDefault, path: ['jemaah_data'], label: 'DB-Default: root/jemaah_data' },
+    ];
+
+    for (const p of possiblePaths) {
+      try {
+        const ref = p.path.length === 2 ? doc(p.db, p.path[0], p.path[1]) : doc(p.db, p.path[0]);
+        const snap = await getDoc(ref).catch(() => null);
+        if (snap && snap.exists()) {
+          const data = snap.data() as { jemaah: Jemaah[] };
+          if (data.jemaah && data.jemaah.length > 0) {
+            console.log(`✅ Success! Recovered jemaah data from ${p.label}. Count: ${data.jemaah.length}`);
+            return data.jemaah;
+          }
+        }
+      } catch (e) {
+        console.warn(`Probing jemaah at ${p.label} failed:`, e);
+      }
     }
+
+    // Try collection 'jemaah' (root level)
+    const collectionsToTry = [
+      { db: db, name: 'jemaah', label: 'DB-Config: jemaah (col)' },
+      { db: dbDefault, name: 'jemaah', label: 'DB-Default: jemaah (col)' }
+    ];
+    for (const col of collectionsToTry) {
+      try {
+        const colSnap = await getDocs(collection(col.db, col.name)).catch(() => null);
+        if (colSnap && !colSnap.empty) {
+          console.log(`✅ Success! Found legacy jemaah collection in ${col.label}. Items: ${colSnap.size}`);
+          return colSnap.docs.map(d => ({ id: d.id, ...d.data() } as any as Jemaah));
+        }
+      } catch (e) {
+        console.warn(`Probing jemaah collection ${col.label} failed:`, e);
+      }
+    }
+
     return getStorage('jemaah_data', defaultJemaah);
   } catch (error) {
     console.error('fetchJemaah overall failure:', error);
@@ -317,16 +349,69 @@ export async function saveJemaah(jemaah: Jemaah[]) {
 export async function getAdminContent(): Promise<AdminContent> {
   try {
     await ensureAuth();
-    // 1. Try Firestore first
-    const docRef = doc(db, 'settings', 'admin_content');
-    const docSnap = await getDoc(docRef).catch(e => {
-        console.warn("Firestore admin_content fetch failed:", e);
-        return null;
-    });
     
-    if (docSnap && docSnap.exists()) {
-      return docSnap.data() as AdminContent;
+    const possiblePaths = [
+      { db: db, path: ['settings', 'admin_content'], label: 'DB-Config: settings/admin_content' },
+      { db: db, path: ['settings', 'admin-content'], label: 'DB-Config: settings/admin-content' },
+      { db: db, path: ['settings', 'entities'], label: 'DB-Config: settings/entities' },
+      { db: db, path: ['admin_content'], label: 'DB-Config: root/admin_content' },
+      { db: dbDefault, path: ['settings', 'admin_content'], label: 'DB-Default: settings/admin_content' },
+      { db: dbDefault, path: ['settings', 'admin-content'], label: 'DB-Default: settings/admin-content' },
+      { db: dbDefault, path: ['settings', 'entities'], label: 'DB-Default: settings/entities' },
+      { db: dbDefault, path: ['admin_content'], label: 'DB-Default: root/admin_content' },
+    ];
+
+    let recoveredData: AdminContent | null = null;
+
+    console.log("--- Starting Deep Search for Recovery ---");
+    for (const p of possiblePaths) {
+      try {
+        const ref = p.path.length === 2 ? doc(p.db, p.path[0], p.path[1]) : doc(p.db, p.path[0]);
+        const snap = await getDoc(ref).catch(() => null);
+        if (snap && snap.exists()) {
+          const data = snap.data() as AdminContent;
+          if (data.materi && data.materi.length > 0) {
+            console.log(`✅ Success! Recovered data from ${p.label}. Materials: ${data.materi.length}`);
+            recoveredData = data;
+            break;
+          }
+          console.log(`ℹ️ Found document at ${p.label}, but it has no materials.`);
+          recoveredData = recoveredData || data; // Keep it if we haven't found better
+        }
+      } catch (e) {
+        console.warn(`Probing ${p.label} failed:`, e);
+      }
     }
+
+    // Individual Collection Probing
+    if (!recoveredData || !recoveredData.materi || recoveredData.materi.length === 0) {
+      const collectionsToTry = [
+        { db: db, name: 'materi', label: 'DB-Config: materi (col)' },
+        { db: dbDefault, name: 'materi', label: 'DB-Default: materi (col)' }
+      ];
+
+      for (const col of collectionsToTry) {
+        try {
+          const colSnap = await getDocs(collection(col.db, col.name)).catch(() => null);
+          if (colSnap && !colSnap.empty) {
+            console.log(`✅ Success! Found legacy collection '${col.name}' in ${col.label}. Items: ${colSnap.size}`);
+            const items = colSnap.docs.map(d => ({ id: d.id, ...d.data() } as MateriItem));
+            if (!recoveredData) recoveredData = { ...defaultAdminContent };
+            recoveredData.materi = items;
+            break;
+          }
+        } catch (e) {
+          console.warn(`Probing collection ${col.label} failed:`, e);
+        }
+      }
+    }
+
+    if (recoveredData) {
+      console.log("--- End of Deep Search: Success ---");
+      return recoveredData;
+    }
+
+    console.log("--- End of Deep Search: No Firestore data found. Using fallback source. ---");
 
     // 2. Fallback to Spreadsheet
     const response = await fetch(`${SPREADSHEET_CONTENT_URL}&t=${Date.now()}`).catch(e => {
@@ -396,6 +481,25 @@ export async function getAdminContent(): Promise<AdminContent> {
                   jenis: getV(['JENIS', 'NAMA', 'ITEM']),
                   total: parseInt(getV(['TOTAL', 'BIAYA'])) || 0,
                   dibayar: parseInt(getV(['DIBAYAR', 'BAYAR'])) || 0
+                });
+              }
+              // Mapping MATERI from Spreadsheet
+              if (['MATERI', 'PUSTAKA', 'DOA', 'VIDEO', 'TEKS', 'DOWNLOAD'].includes(type)) {
+                const subTipe = type === 'MATERI' || type === 'PUSTAKA' 
+                  ? (getV(['SUBTIPE', 'SUBKATEGORI', 'JENIS_MATERI']) || 'teks').toLowerCase() 
+                  : type.toLowerCase();
+                
+                content.materi.push({
+                  id: Math.random().toString(36).substr(2, 9),
+                  judul: getV(['JUDUL', 'NAMA', 'TITLE']),
+                  tipe: subTipe as any,
+                  link: getV(['LINK', 'URL', 'DRIVE']),
+                  isi: {
+                    arab: getV(['ARAB']),
+                    latin: getV(['LATIN']),
+                    terjemahan: getV(['TERJEMAHAN', 'ART']),
+                    konten: getV(['ISI', 'KONTEN', 'TEXT'])
+                  }
                 });
               }
             });
