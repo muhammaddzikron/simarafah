@@ -117,24 +117,50 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
       if (isManual) setRefreshing(true);
       else setLoading(true);
       
-      const [status, dataJ, dataC, dataA, dataR] = await Promise.all([
-        testFirebaseConnection(),
-        fetchJemaah(isManual),
-        getAdminContent(isManual), // Use isManual as forceSync
-        getAdminUsers(),
-        getRegistrations()
-      ]);
+      // Resilient loading: if one fails, others should still try to load
+      // Specially important for Quota Exceeded errors
       
+      const status = await testFirebaseConnection();
       setCloudStatus(status as any);
-      setJemaah(dataJ || []);
-      if (dataC) setContent(dataC);
-      setAdmins(dataA || []);
-      setRegistrations(dataR || []);
-    } catch (err: any) {
-      console.error("Critical error loading dashboard data:", err);
-      if (err?.code === 'resource-exhausted') {
-        showToast('Kuota Baca/Tulis Cloud Penuh. Data mungkin tidak terbaru (Limit Free).', 'error');
+
+      // 1. Load Jemaah (Prioritize Master Spreadsheet)
+      try {
+        const dataJ = await fetchJemaah(isManual);
+        setJemaah(dataJ || []);
+      } catch (e: any) {
+        console.error("Jemaah load failed:", e);
+        if (e?.code === 'resource-exhausted') showToast('Kuota Baca Cloud Penuh. Menggunakan data lokal.', 'error');
       }
+
+      // 2. Load Content
+      try {
+        const dataC = await getAdminContent(isManual);
+        if (dataC) setContent(dataC);
+      } catch (e: any) {
+        console.error("Content load failed:", e);
+      }
+
+      // 3. Load Admins
+      try {
+        const dataA = await getAdminUsers();
+        setAdmins(dataA || []);
+      } catch (e: any) {
+        console.error("Admins load failed:", e);
+      }
+
+      // 4. Load Registrations
+      try {
+        const dataR = await getRegistrations();
+        setRegistrations(dataR || []);
+      } catch (e: any) {
+        console.error("Registrations load failed:", e);
+        if (e?.code === 'resource-exhausted') {
+           showToast('Kuota Baca Registrasi penuh (Limit Free).', 'error');
+        }
+      }
+      
+    } catch (err: any) {
+      console.error("Critical error in loadAllData:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);

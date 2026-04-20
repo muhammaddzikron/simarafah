@@ -238,10 +238,10 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
             };
 
             const idx = {
-              nama: findC(['nama lengkap', 'jemaah', 'nama'], 8), 
-              porsi: findC(['nomor porsi', 'porsi hq', 'porsi'], 5), 
-              kloter: findC(['kloter'], 1),
-              romb: findC(['rombongan'], 2),
+              nama: findC(['nama lengkap', 'jemaah', 'nama jemaah', 'nama'], 8), 
+              porsi: findC(['nomor porsi', 'no. porsi', 'no porsi', 'porsi hq', 'porsi', 'nomor_porsi'], 5), 
+              kloter: findC(['kloter', 'kelompok terbang'], 1),
+              romb: findC(['rombongan', 'romb'], 2),
               asrama: findC(['asrama', 'masuk'], 3),
               karom: findC(['ketua rombongan', 'karom', 'ketua'], 4),
               waKarom: findC(['wa karom', 'wa ketua'], 28), 
@@ -795,15 +795,18 @@ export async function login(username: string, passwordOrPorsi: string): Promise<
     fetchJemaah()
   ]);
 
+  console.log(`Login Debug: Attempting login for [${uName}]. Jemaah master count: ${jemaahList?.length || 0}`);
+
   const admin = admins.find(u => u.username === uName && (u.password === pwOrPorsi || u.porsi === pwOrPorsi));
   
   if (admin) {
+    console.log("Login Debug: Logged in as Admin/Petugas.");
     return admin;
   }
   
   // LOGGING (Internal)
   if (!jemaahList || jemaahList.length === 0) {
-    console.error("No jemaah loaded.");
+    console.error("Login Debug: No jemaah loaded from master source.");
   }
 
   // Helper for flexible matching (removes non-digits)
@@ -814,12 +817,12 @@ export async function login(username: string, passwordOrPorsi: string): Promise<
   const jemaah = jemaahList.find(j => {
     const dbPorsi = cleanInput(j.nomorPorsi);
     const dbPorsiDigits = toDigits(dbPorsi);
-    const dbName = cleanInput(j.namaLengkap).toLowerCase();
+    const dbName = (j.namaLengkap || '').toLowerCase().trim();
     
     // 1. Exact Porsi match
     if (dbPorsi && (dbPorsi === pwOrPorsi || dbPorsi === uName)) return true;
     
-    // 2. Digits-only match (if long enough)
+    // 2. Digits-only match (if long enough, e.g. 10 digits porsi)
     if (uDigits && uDigits.length >= 7 && dbPorsiDigits === uDigits) return true;
     if (pDigits && pDigits.length >= 7 && dbPorsiDigits === pDigits) return true;
     
