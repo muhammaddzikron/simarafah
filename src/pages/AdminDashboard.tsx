@@ -1553,6 +1553,28 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                               className="w-full bg-neutral-50 border border-neutral-100 rounded-2xl py-3.5 pl-12 pr-4 text-[11px] font-bold focus:ring-4 focus:ring-rose-500/10 outline-none transition-all"
                             />
                           </div>
+                          
+                          {/* Video Preview in Admin */}
+                          {m.link && m.link !== '#' && (
+                            <div className="aspect-video bg-neutral-100 rounded-2xl overflow-hidden border border-neutral-100">
+                              {(() => {
+                                let embedLink = m.link;
+                                if (embedLink.includes('youtube.com/watch?v=')) {
+                                  embedLink = embedLink.replace('watch?v=', 'embed/');
+                                } else if (embedLink.includes('youtu.be/')) {
+                                  const id = embedLink.split('youtu.be/')[1].split('?')[0];
+                                  embedLink = `https://www.youtube.com/embed/${id}`;
+                                }
+                                return (
+                                  <iframe 
+                                    src={embedLink} 
+                                    className="w-full h-full border-none"
+                                    title="Preview"
+                                  />
+                                );
+                              })()}
+                            </div>
+                          )}
                         </div>
                       );
                     })}

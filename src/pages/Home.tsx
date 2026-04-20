@@ -916,9 +916,37 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                               </div>
                             )}
                             {(m.tipe === 'video') && (
-                              <a href={m.link} target="_blank" className="flex items-center justify-center gap-2 w-full py-4 bg-rose-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-rose-100 transition-all active:scale-95">
-                                <Play className="w-4 h-4 fill-current" /> Tonton Video Materi
-                              </a>
+                              <div className="space-y-4">
+                                {(() => {
+                                  let embedLink = m.link || '';
+                                  if (embedLink.includes('youtube.com/watch?v=')) {
+                                    embedLink = embedLink.replace('watch?v=', 'embed/');
+                                  } else if (embedLink.includes('youtu.be/')) {
+                                    const id = embedLink.split('youtu.be/')[1].split('?')[0];
+                                    embedLink = `https://www.youtube.com/embed/${id}`;
+                                  }
+                                  
+                                  if (!embedLink || embedLink === '#') return (
+                                    <div className="p-8 text-center bg-neutral-50 rounded-2xl border border-dashed border-neutral-200">
+                                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Link video tidak valid</p>
+                                    </div>
+                                  );
+
+                                  return (
+                                    <div className="aspect-video bg-neutral-900 rounded-2xl overflow-hidden shadow-lg border border-neutral-100">
+                                      <iframe 
+                                        src={embedLink} 
+                                        className="w-full h-full border-none"
+                                        allowFullScreen
+                                        title={m.judul}
+                                      />
+                                    </div>
+                                  );
+                                })()}
+                                <a href={m.link} target="_blank" className="flex items-center justify-center gap-2 w-full py-3 bg-neutral-50 text-neutral-400 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-neutral-100 transition-all">
+                                  <ExternalLink className="w-3.5 h-3.5" /> Buka di YouTube
+                                </a>
+                              </div>
                             )}
                             {(m.tipe === 'download') && (
                               <a href={m.link} target="_blank" className="flex items-center justify-center gap-2 w-full py-4 bg-blue-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95">

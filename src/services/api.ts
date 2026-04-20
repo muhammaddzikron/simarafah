@@ -69,7 +69,15 @@ export const defaultJemaah: Jemaah[] = [
 ];
 
 export const defaultAdminContent: AdminContent = {
-  profil: 'KBIHU Arafah Muhammadiyah Klaten adalah lembaga bimbingan haji dan umrah yang berpengalaman dan terpercaya di bawah naungan Muhammadiyah Klaten.',
+  profil: `KBIHU Arafah Muhammadiyah Klaten (Kelompok Bimbingan Ibadah Haji dan Umrah Arafah Muhammadiyah Klaten) merupakan lembaga bimbingan ibadah haji dan umrah yang berada di bawah naungan Lembaga Pembinaan Haji dan Umrah (LPHU) Pimpinan Daerah Muhammadiyah (PDM) Klaten. Sebagai mitra resmi Kementerian Agama, KBIHU Arafah Klaten memiliki peran penting dalam memberikan pembinaan, bimbingan manasik, serta pendampingan bagi calon jamaah haji dan umrah.
+
+Selama lebih dari 26 tahun berdiri, KBIHU Arafah Muhammadiyah Klaten telah konsisten membersamai dan membimbing jamaah dalam mempersiapkan ibadah secara optimal, baik dari segi pemahaman syariat, kesiapan fisik, maupun kematangan mental dan spiritual. Lembaga ini terus berkomitmen memberikan pelayanan terbaik demi tercapainya ibadah haji dan umrah yang mandiri, tertib, dan mabrur.
+
+Dalam pelayanannya, KBIHU Arafah Muhammadiyah Klaten menyelenggarakan berbagai kegiatan, di antaranya bimbingan manasik haji secara intensif dan simulasi manasik massal, yang bertujuan memperkuat pemahaman jamaah terhadap rukun dan tata cara ibadah haji. Selain itu, lembaga ini juga memberikan pendampingan langsung kepada jamaah, baik saat di tanah air maupun selama pelaksanaan ibadah di Tanah Suci. Pada musim haji 2026, KBIHU Arafah Klaten tercatat mendampingi sekitar 726 calon jamaah haji yang terbagi dalam beberapa kelompok terbang (kloter).
+
+Seiring perkembangan zaman, KBIHU Arafah Muhammadiyah Klaten juga mengadopsi transformasi digital dalam memberikan layanan bimbingan, sehingga lebih praktis, terjangkau, dan mudah diakses oleh jamaah. Hal ini menjadi bagian dari upaya meningkatkan kualitas pelayanan yang profesional dan berkelanjutan.
+
+Saat ini, KBIHU Arafah Muhammadiyah Klaten dipimpin oleh Dr. dr. H. Husen Prabowo, M.Kes, yang terus mendorong inovasi dan penguatan pelayanan demi mewujudkan jamaah yang mandiri, berilmu, dan meraih haji mabrur.`,
   galeri: ['https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
   agenda: [
     { tanggal: '2024-05-20', kegiatan: 'Manasik Haji Ke-5' },
