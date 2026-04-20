@@ -86,10 +86,25 @@ Dalam pelayanannya, KBIHU Arafah Muhammadiyah Klaten menyelenggarakan berbagai k
 Seiring perkembangan zaman, KBIHU Arafah Muhammadiyah Klaten juga mengadopsi transformasi digital dalam memberikan layanan bimbingan, sehingga lebih praktis, terjangkau, dan mudah diakses oleh jamaah. Hal ini menjadi bagian dari upaya meningkatkan kualitas pelayanan yang profesional and berkelanjutan.
 
 Saat ini, KBIHU Arafah Muhammadiyah Klaten dipimpin oleh Dr. dr. H. Husen Prabowo, M.Kes, yang terus mendorong inovasi dan penguatan pelayanan demi mewujudkan jamaah yang mandiri, berilmu, dan meraih haji mabrur.`,
-  galeri: ['https://www.youtube.com/watch?v=zcgRIpUf6S0'],
+  galeri: [
+    'https://www.youtube.com/watch?v=zcgRIpUf6S0',
+    'https://www.youtube.com/watch?v=bIPRDqX-OLE',
+    'https://www.youtube.com/watch?v=cDWLtQ3N5_g',
+    'https://www.youtube.com/watch?v=W-Gf7Ogeyog',
+    'https://www.youtube.com/watch?v=jKrOIdDJFYw',
+    'https://www.youtube.com/watch?v=BOLhKvFdjfk',
+    'https://www.youtube.com/watch?v=M8iqO_HjJAE',
+    'https://www.youtube.com/watch?v=pTVaNbC5E-s',
+    'https://www.youtube.com/watch?v=IQtXoLoeN0I',
+    'https://www.youtube.com/watch?v=xC27-AXg56Q',
+    'https://www.youtube.com/watch?v=abg0NcsWRZ8',
+    'https://www.youtube.com/watch?v=0U7ikRmH2Ew',
+    'https://www.youtube.com/watch?v=r3KFRq4s6O4',
+    'https://www.youtube.com/watch?v=-14q0nn_x_8'
+  ],
   agenda: [
-    { tanggal: '2024-05-20', kegiatan: 'Manasik Haji Ke-5' },
-    { tanggal: '2024-06-01', kegiatan: 'Pelepasan Jemaah' }
+    { tanggal: '2026-04-20', kegiatan: 'Pengambilan Koper di Gedung KBIHU Arafah Klaten' },
+    { tanggal: '2026-04-28', kegiatan: 'Pamitan Haji Kabupaten Klaten di Ghra Bung karno Kabupaten Klaten' }
   ],
   materi: [
     { id: '1', judul: 'Doa Sebelum Berangkat', tipe: 'doa', isi: { arab: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ أَنْ أَضِلَّ أَوْ أُضَلَّ', latin: 'Allahumma inni auzubika an adilla aw udalla', terjemahan: 'Ya Allah, aku berlindung kepada-Mu dari tersesat atau disesatkan.' } },
