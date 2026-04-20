@@ -97,9 +97,9 @@ Saat ini, KBIHU Arafah Muhammadiyah Klaten dipimpin oleh Dr. dr. H. Husen Prabow
     { id: '3', judul: 'File PDF Manasik', link: '#', tipe: 'download' }
   ],
   sosmed: {
-    ig: '@arafahklaten',
-    tiktok: '@arafahklaten',
-    yt: '@arafahklaten'
+    ig: 'arafahklaten',
+    tiktok: 'arafahklaten',
+    yt: 'arafahklaten'
   },
   kontak: {
     wa1: '6285225881780',
@@ -107,16 +107,88 @@ Saat ini, KBIHU Arafah Muhammadiyah Klaten dipimpin oleh Dr. dr. H. Husen Prabow
     alamat: 'Dadimulyo, Gergunung, Klaten Utara, Klaten, jawa Tengah',
     peta: 'https://maps.app.goo.gl/iY1dhxG4RfydVYnC8'
   },
-  pengumuman: 'Diberitahukan kepada seluruh jemaah untuk segera melengkapi dokumen paspor.',
+  pengumuman: 'Kepada seluruh Jemaah Arafah untuk mulai mempersiapkan perbekalan dan dimasukkan dalam tas koper masing-masing.',
   perlengkapan: [
     { item: 'Buku Panduan', selesai: true },
     { item: 'Seragam Batik', selesai: false },
     { item: 'Tas Paspor', selesai: true }
   ],
   ceklistTemplates: {
-    pria: 'Tas Koper Besar Pria\n1 atau 1,5 stel kain Ihrom\nPakaian Harian\nSandal\nAlat Mandi\nSarung',
-    wanita: 'Tas Tenteng Wanita\n1 stel Baju Ihram\nPakaian Harian\nSandal\nAlat Mandi\nAlat Sholat',
-    tambahan: 'Tas Paspor\nBerkas Kesehatan\nPas Foto 3x4\nUang Real\nIdentitas Nama'
+    pria: `Tas Koper Besar Pria
+1 atau 1,5 stel kain Ihrom.
+Pakaian Harian: 2-3 Celana panjang (komprang) bahan kaos/katun, 2-3 Baju koko, kaos panjang, atau rompi, 1-2 Sarung.
+Kaos kaki, jaket, dan pakaian dalam secukupnya.
+Sandal jepit (cadangan).
+Keperluan Logistik & Tidur
+Perlengkapan Tidur: Alas tidur untuk di Muzdalifah dan bantal tiup.
+Alat Makan: Piring, cangkir (besar & kecil), sendok, pisau, tisu basah & kering.
+Bahan Makanan: Lauk kering, mie instan, kopi, jahe, serta suplemen/minuman penyegar (Adem Sari, CDR, dll).
+Kebersihan: Perlengkapan mandi (sabun, pasta gigi, sampo), masker, gayung, dan ember.
+Perlengkapan Tambahan & Kesehatan
+Alat Pendukung: Payung, topi, tas sandal, tempat air (Aqua), tempat kerikil, gantungan baju (hanger), peniti, gunting, dan alat cukur.
+Elektronik & Keamanan: Stop kontak, serta rantai/gembok (khusus pengguna kursi roda).
+Obat-obatan: Obat batuk, flu, alergi, diare, krim pelembap, bedak gatal, obat gosok, dan Salonpas.
+Ibadah
+Al-Qur'an, buku manasik, dan daftar doa-doa titipan.
+Tas Tentengan Pria
+1 stel Baju Ihram dan Sabuk
+1 stel Baju Ganti
+Pakaian dalam untuk di Embarkasi
+1 Tas Kecil Perlengkapan Mandi (Sabun, Shampo, Odol yang kecil) sikat gigi, Kanebo/Handuk
+Sandal Jepit
+Rompi Arafah
+Sajadah Arafah
+Sarung`,
+    wanita: `Tas Koper Besar Wanita
+Pakaian & Alas Kaki
+Pakaian Ihram: 2 atau 3 stel.
+Pakaian Harian Muslimah: 2/3 stel.
+Daster: 2/3 buah (bahan menyerap keringat).
+Bergo/Kerudung & Mukena: 2/3 buah.
+Kaus Kaki & Pakaian Dalam: Secukupnya.
+Sandal Jepit: Sebagai cadangan.
+Perlengkapan Tidur & Lapangan
+Alas tidur untuk di Muzdalifah & bantal tiup.
+Masker (5 buah).
+Tempat botol minum (Aqua) & tempat kerikil.
+Topi, payung, tas sandal.
+Ember & gayung.
+Perlengkapan Mandi & Kebersihan
+Sabun, pasta gigi, sampo (ukuran besar).
+Tisu kering dan basah.
+Keperluan Makan & Logistik
+Peralatan: Piring, cangkir (besar & kecil), sendok, pisau.
+Bahan Makanan: Lauk pauk kering, mie instan, kopi.
+Minuman Kesehatan: Jahe vegeta, Adem Sari, CDR, dll.
+Perlengkapan Tambahan
+Tampar (tali), hanger, jepitan baju, peniti, gunting.
+Stop kontak.
+Rantai dan gembok (khusus bagi yang membawa kursi roda).
+Kesehatan & Ibadah
+Obat Pribadi: Obat batuk, flu, alergi, diare, dll.
+Perawatan Kulit: Cream pelembab, bedak gatal, obat gosok, Salonpas.
+Buku: Al-Qur'an, buku manasik, dan daftar doa titipan.
+Tas Tenteng Wanita
+1 stel Baju Ihram, Kerudung, Deker tangan
+1 stel Baju Ganti, jaket tebal
+Pakaian dalam untuk di Embarkasi
+1 Tas Kecil Perlengkapan Mandi (Sabun, Shampo, Odol yang kecil) sikat gigi, Kanebo/Handuk
+Sandal Jepit
+Rompi Arafah
+Sajadah Arafah
+Alat Sholat`,
+    tambahan: `Tas Paspor
+Berkas Kesehatan, Paspor, Bukti Setor Warna Putih Pas Foto 3 x 4 = 2 lembar (muka 80%)
+Kapas, tisu, tusuk gigi, catton bud, uang real
+Gelang, id card
+Kaos tangan, masker, spryer
+Kacamata hitam bertali, gembok, tasbih tawaf
+Buku Do'a, lembar do'a pulang haji, sepidol besar permanen (hitam/Biru dan putih)
+Obat-obatan yang harus siap di minum, salon pas dll
+Identitas Nama Semua Perbekalan
+Berangkat memakai Batik Haji Nasional dan bawahan putih 
+Batik Haji Nasional, Rompi Arafah diberi identitas Nama dan Bendera Merah Putih
+Sajadah Arafah beri identitas Nama untuk menghindari tertukar dengan jamaah lain.`
   },
   pembayaran: [
     { jenis: 'Pendaftaran Arafah', total: 3000000, dibayar: 200000 },
