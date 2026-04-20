@@ -172,6 +172,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
   const [userChecklist, setUserChecklist] = useState<Record<string, boolean>>({});
   const [loadingChecklist, setLoadingChecklist] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'saving' | 'error' | 'quota-exceeded' | null>(null);
+  const skipSyncRef = useRef(false);
 
   useEffect(() => {
     if (user?.role === 'jemaah' && user.porsi) {
@@ -183,9 +184,11 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
           try {
             docSnap = await getDoc(docRef);
           } catch (fetchError: any) {
+            if (fetchError.code === 'resource-exhausted') {
+               setSyncStatus('quota-exceeded');
+            }
             if (fetchError.message?.includes('client is offline')) {
               console.warn("Firestore is offline, trying to load from cache...");
-              // getDoc will naturally try cache if offline, but if it throws, we just ignore
             } else {
               throw fetchError;
             }
@@ -205,6 +208,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
           }
 
           if (docSnap && docSnap.exists()) {
+            skipSyncRef.current = true; // Prevents triggering save effect immediately
             setUserChecklist(docSnap.data().checkedItems || {});
           }
         } catch (e) {
@@ -221,6 +225,13 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
   useEffect(() => {
     if (!user?.porsi || Object.keys(userChecklist).length === 0) return;
     
+    // If this change was from initial load, skip saving
+    if (skipSyncRef.current) {
+        skipSyncRef.current = false;
+        setSyncStatus('synced');
+        return;
+    }
+
     const timeoutId = setTimeout(async () => {
       try {
         setSyncStatus('saving');
@@ -232,7 +243,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
         console.log("Checklist synced to cloud");
         setSyncStatus('synced');
       } catch (e: any) {
-        if (e?.code === 'resource-exhausted') {
+        if (e?.code === 'resource-exhausted' || (e?.message && e.message.includes('Quota'))) {
           console.warn("Cloud quota exceeded, checklist saved locally only.");
           setSyncStatus('quota-exceeded');
         } else {
@@ -1401,9 +1412,16 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                 <CheckCircle2 className="w-5 h-5 text-emerald-200" />
                 <h2 className="text-sm font-black uppercase tracking-widest">Kesiapan Berangkat</h2>
               </div>
-              <span className="text-[10px] font-black bg-emerald-900/30 px-3 py-1.5 rounded-full border border-emerald-400/30 uppercase tracking-widest">
-                {checklistCompletion}%
-              </span>
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-[10px] font-black bg-emerald-900/30 px-3 py-1.5 rounded-full border border-emerald-400/30 uppercase tracking-widest">
+                  {checklistCompletion}%
+                </span>
+                {syncStatus === 'quota-exceeded' && (
+                  <span className="text-[7px] font-black bg-amber-500/20 text-amber-200 px-2 py-0.5 rounded border border-amber-500/30 uppercase animate-pulse">
+                    ⚠️ Offline (Kuota Penuh)
+                  </span>
+                )}
+              </div>
             </div>
             <div className="p-6 space-y-6">
               <div className="h-3 bg-neutral-100 rounded-full overflow-hidden">

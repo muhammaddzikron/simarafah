@@ -402,12 +402,20 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
 }
 
 export async function saveJemaah(jemaah: Jemaah[]) {
+  if (isQuotaExceeded) {
+    console.warn("Firestore: Write skipped (Quota Exceeded)");
+    saveStorage(KEY_JEMAAH, jemaah);
+    return;
+  }
   try {
     await ensureAuth();
     await setDoc(doc(db, 'settings', 'jemaah_data'), {
       jemaah,
       updatedAt: serverTimestamp()
-    }).catch(e => handleFirestoreError(e, 'write', 'settings/jemaah_data'));
+    }).catch(e => {
+      if (e?.code === 'resource-exhausted') isQuotaExceeded = true;
+      handleFirestoreError(e, 'write', 'settings/jemaah_data');
+    });
     saveStorage(KEY_JEMAAH, jemaah);
   } catch (e) {
     console.error("Error saving jemaah to Firebase:", e);
@@ -635,6 +643,9 @@ export async function getAdminContent(forceSync = false): Promise<AdminContent> 
   }
 }
 
+// Global state for quota tracking
+let isQuotaExceeded = false;
+
 // Recursive safer sanitization for Firebase
 function sanitizePayload(obj: any): any {
   if (Array.isArray(obj)) {
@@ -652,6 +663,11 @@ function sanitizePayload(obj: any): any {
 }
 
 export async function saveAdminContent(content: AdminContent) {
+  if (isQuotaExceeded) {
+    console.warn("Firestore: Write skipped (Quota Exceeded)");
+    saveStorage(KEY_CONTENT, content);
+    return;
+  }
   try {
     await ensureAuth();
     
@@ -665,6 +681,7 @@ export async function saveAdminContent(content: AdminContent) {
       ...sanitized,
       updatedAt: serverTimestamp()
     }).catch(e => {
+      if (e?.code === 'resource-exhausted') isQuotaExceeded = true;
       console.error("Firestore setDoc failed:", e);
       handleFirestoreError(e, 'write', 'settings/admin_content');
     });
@@ -716,12 +733,20 @@ export async function getAdminUsers(): Promise<User[]> {
 }
 
 export async function saveAdminUsers(users: User[]) {
+  if (isQuotaExceeded) {
+    console.warn("Firestore: Write skipped (Quota Exceeded)");
+    saveStorage(KEY_USERS, users);
+    return;
+  }
   try {
     await ensureAuth();
     await setDoc(doc(db, 'settings', 'admin_users'), {
       users,
       updatedAt: serverTimestamp()
-    }).catch(e => handleFirestoreError(e, 'write', 'settings/admin_users'));
+    }).catch(e => {
+      if (e?.code === 'resource-exhausted') isQuotaExceeded = true;
+      handleFirestoreError(e, 'write', 'settings/admin_users');
+    });
     saveStorage(KEY_USERS, users);
   } catch (e) {
     console.error("Error saving admin users to Firebase:", e);
