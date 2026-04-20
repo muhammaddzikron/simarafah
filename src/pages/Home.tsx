@@ -1369,23 +1369,18 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
     );
   }
 
-  if (dbStatus === 'loading') {
-    return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 space-y-6">
-        <div className="relative">
-          <div className="w-20 h-20 border-4 border-emerald-50 rounded-full animate-pulse" />
-          <Loader2 className="w-10 h-10 text-primary animate-spin absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-        </div>
-        <div className="text-center space-y-2">
-          <h3 className="text-lg font-black text-primary tracking-tight uppercase">Menyiapkan Dashboard</h3>
-          <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-widest animate-pulse">Menghubungkan ke Cloud Arafah...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="px-5 py-6 space-y-8 pb-24 max-w-md mx-auto">
+      {dbStatus === 'loading' && (
+        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-[10px] font-bold text-emerald-800 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-4 h-4 text-primary animate-spin" />
+            <span className="uppercase tracking-widest">Sinkronisasi Cloud Arafah...</span>
+          </div>
+          <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+        </div>
+      )}
+
       {dbStatus === 'error' && (
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-[10px] font-bold text-amber-800 flex items-center gap-3">
           <RefreshCw className="w-4 h-4 text-amber-500 animate-spin" />
@@ -1758,21 +1753,21 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
 
           {/* Running Announcement (Pengumuman Berjalan) */}
           {content?.pengumuman && (
-            <div className="bg-orange-50 border-y border-orange-100 overflow-hidden py-2.5 relative shadow-sm rounded-2xl">
+            <div className="bg-emerald-50 border-y border-emerald-100 overflow-hidden py-2.5 relative shadow-sm rounded-2xl">
               <div className="flex animate-marquee whitespace-nowrap">
                 <div className="flex shrink-0 items-center gap-4 pr-10">
-                  <span className="flex items-center gap-2 text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-100/50 px-3 py-1 rounded-full">
+                  <span className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-100/50 px-3 py-1 rounded-full">
                     <Bell className="w-3.5 h-3.5" /> INFORMASI
                   </span>
-                  <p className="text-[11px] font-bold text-orange-800 tracking-tight italic">
+                  <p className="text-[11px] font-bold text-emerald-800 tracking-tight italic">
                     {content.pengumuman}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-4 pr-10">
-                  <span className="flex items-center gap-2 text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-100/50 px-3 py-1 rounded-full">
+                  <span className="flex items-center gap-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-100/50 px-3 py-1 rounded-full">
                     <Bell className="w-3.5 h-3.5" /> INFORMASI
                   </span>
-                  <p className="text-[11px] font-bold text-orange-800 tracking-tight italic">
+                  <p className="text-[11px] font-bold text-emerald-800 tracking-tight italic">
                     {content.pengumuman}
                   </p>
                 </div>
