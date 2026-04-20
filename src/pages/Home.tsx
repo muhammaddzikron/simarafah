@@ -1765,7 +1765,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                 { id: 'profil', icon: <BookOpen />, label: 'Profil KBIHU', color: 'bg-blue-50 text-blue-600' },
                 { id: 'galeri', icon: <Video />, label: 'Dokumentasi', color: 'bg-rose-50 text-rose-600' },
                 { id: 'agenda', icon: <Calendar />, label: 'Kegiatan', color: 'bg-orange-50 text-orange-600' },
-                { id: 'materi', icon: <BookOpen />, label: 'Manasik', color: 'bg-indigo-50 text-indigo-600' },
+                { id: 'materi', icon: <BookOpen />, label: 'Materi', color: 'bg-indigo-50 text-indigo-600' },
                 { id: 'sosmed', icon: <Share2 />, label: 'Media Sosial', color: 'bg-sky-50 text-sky-600' },
                 { id: 'kontak', icon: <Phone />, label: 'Bantuan', color: 'bg-emerald-50 text-emerald-600' },
               ].map((item, idx) => (
