@@ -32,9 +32,11 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: any, operation: FirestoreErrorInfo['operationType'], path: string | null = null): never {
-  if (error.code === 'permission-denied') {
+  if (error.code === 'permission-denied' || error.code === 'resource-exhausted') {
     const errorInfo: FirestoreErrorInfo = {
-      error: error.message,
+      error: error.code === 'resource-exhausted' 
+        ? 'Quota Limit Exceeded: Firestore free tier write units exhausted for today. Please try again tomorrow or upgrade your plan.' 
+        : error.message,
       operationType: operation,
       path: path,
       authInfo: {

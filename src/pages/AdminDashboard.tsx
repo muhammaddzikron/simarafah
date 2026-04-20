@@ -62,6 +62,30 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
     setTimeout(() => setToast(null), 3000);
   };
 
+  const processFirestoreError = (err: any, fallbackMsg: string) => {
+    console.error(fallbackMsg, err);
+    let msg = fallbackMsg;
+
+    if (err?.code === 'resource-exhausted') {
+      msg = 'Kuota Cloud JEMAAH penuh (Limit Free). Mohon coba lagi besok saat kuota direset.';
+    } else if (err?.message && err.message.startsWith('{')) {
+      try {
+        const info = JSON.parse(err.message);
+        if (info.error && info.error.includes('Quota')) {
+          msg = '⚠️ KUOTA DATABASE HARIAN TELAH HABIS. Database akan aktif kembali besok pagi.';
+        } else {
+          msg = `Error: ${info.error}`;
+        }
+      } catch {
+        msg = err.message;
+      }
+    } else if (err?.message && err.message.includes('permission-denied')) {
+      msg = 'Akses ditolak. Silakan login ulang atau hubungi admin.';
+    }
+
+    showToast(msg, 'error');
+  };
+
   const handleSaveContent = async () => {
     if (!content) return;
     try {
@@ -70,22 +94,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
       setLastSaved(new Date());
       showToast('✅ Seluruh Konten Berhasil Diperbarui di Cloud Firebase!');
     } catch (err: any) {
-      console.error("Error saving content:", err);
-      let errorMsg = 'Gagal menyimpan ke Cloud. Periksa koneksi internet Anda atau hubungi sistem admin.';
-      
-      if (err?.code === 'resource-exhausted') {
-        errorMsg = 'Kuota Cloud JEMAAH penuh (Limit Free). Mohon coba lagi besok saat kuota direset.';
-      } else if (err?.message && err.message.includes('permission-denied')) {
-        errorMsg = 'Akses ditolak (Permission Denied). Pastikan "Anonymous Auth" aktif di Console Firebase dan domain Vercel sudah di-allowlist.';
-      } else if (err?.message && err.message.startsWith('{')) {
-        // This might be our custom FirestoreErrorInfo
-        try {
-          const info = JSON.parse(err.message);
-          errorMsg = `Error [${info.operationType}]: ${info.error}. (Path: ${info.path})`;
-        } catch { /* ignore */ }
-      }
-      
-      showToast(errorMsg, 'error');
+      processFirestoreError(err, 'Gagal menyimpan ke Cloud.');
     } finally {
       setIsSavingContent(false);
     }
@@ -173,7 +182,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
       setRegistrations(prev => prev.map(r => r.id === id ? { ...r, status: status as any } : r));
       showToast('Status pendaftar berhasil diperbarui');
     } catch (err) {
-      showToast('Gagal memperbarui status', 'error');
+      processFirestoreError(err, 'Gagal memperbarui status');
     }
   };
 
@@ -184,7 +193,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
       setRegistrations(prev => prev.filter(r => r.id !== id));
       showToast('Data pendaftar berhasil dihapus');
     } catch (err) {
-      showToast('Gagal menghapus data', 'error');
+      processFirestoreError(err, 'Gagal menghapus data');
     }
   };
 
@@ -199,7 +208,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
       setEditingRegistration(null);
       showToast('Data pendaftar berhasil diperbarui');
     } catch (err) {
-      showToast('Gagal memperbarui data', 'error');
+      processFirestoreError(err, 'Gagal memperbarui data');
     } finally {
       setIsSavingReg(false);
     }
@@ -216,7 +225,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
       setSelectedRegs(new Set());
       showToast(`${selectedRegs.size} pendaftar berhasil dihapus`);
     } catch (err) {
-      showToast('Beberapa data gagal dihapus', 'error');
+      processFirestoreError(err, 'Beberapa data gagal dihapus');
     } finally {
       setIsBulkDeleting(false);
     }
@@ -2128,7 +2137,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                       await saveAdminContent(content);
                       showToast('Konten berhasil disinkronkan ke Firebase Cloud!');
                     } catch (err) {
-                      showToast('Gagal menyinkronkan data. Silakan cek koneksi internet anda.', 'error');
+                      processFirestoreError(err, 'Gagal menyinkronkan data.');
                     }
                   }}
                   className="flex-1 md:flex-none px-10 py-4 bg-primary text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-emerald-200 active:scale-95 transition-all flex items-center justify-center gap-2"
@@ -2346,7 +2355,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                           setEditingPassword(null);
                           showToast('Password berhasil diperbarui di Database Cloud!');
                         } catch (err) {
-                          showToast('Gagal memperbarui password. Silakan coba lagi.', 'error');
+                          processFirestoreError(err, 'Gagal memperbarui password.');
                         }
                       }}
                       className="w-full py-4 bg-primary text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 active:scale-95 transition-all"
@@ -2454,7 +2463,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                         setNewAdmin({ username: '', password: '', nama: '', role: 'admin_petugas' });
                         showToast('Admin baru berhasil ditambahkan ke Cloud!');
                       } catch (err) {
-                        showToast('Gagal menambahkan admin.', 'error');
+                        processFirestoreError(err, 'Gagal menambahkan admin.');
                       }
                     }}
                     className="w-full py-4 bg-primary text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 active:scale-95 transition-all"
@@ -2542,7 +2551,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                       setDeleteTarget(null);
                       showToast('User admin berhasil dihapus.');
                     } catch (err) {
-                      showToast('Gagal menghapus user.', 'error');
+                      processFirestoreError(err, 'Gagal menghapus user.');
                     }
                   }}
                   className="w-full py-4 bg-rose-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-rose-100 active:scale-95 transition-all"

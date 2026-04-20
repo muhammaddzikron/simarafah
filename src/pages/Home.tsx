@@ -8,7 +8,7 @@ import {
   X, Download, ExternalLink, Heart, Play, FileText,
   Smartphone, Youtube, Map as MapIcon, Instagram,
   CheckCircle2, Search, ArrowLeft, ChevronLeft, LogOut,
-  Building2, UserPlus, Loader2
+  Building2, UserPlus, Loader2, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Jemaah, AdminContent, MateriItem } from '../types';
@@ -171,6 +171,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
   }, [surahs, quranSearch]);
   const [userChecklist, setUserChecklist] = useState<Record<string, boolean>>({});
   const [loadingChecklist, setLoadingChecklist] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'saving' | 'error' | 'quota-exceeded' | null>(null);
 
   useEffect(() => {
     if (user?.role === 'jemaah' && user.porsi) {
@@ -222,17 +223,21 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
     
     const timeoutId = setTimeout(async () => {
       try {
+        setSyncStatus('saving');
         await setDoc(doc(db, 'checklists', user.porsi!), {
           porsi: user.porsi,
           checkedItems: userChecklist,
           updatedAt: serverTimestamp()
         }, { merge: true });
         console.log("Checklist synced to cloud");
+        setSyncStatus('synced');
       } catch (e: any) {
         if (e?.code === 'resource-exhausted') {
           console.warn("Cloud quota exceeded, checklist saved locally only.");
+          setSyncStatus('quota-exceeded');
         } else {
           console.error("Error saving checklist:", e);
+          setSyncStatus('error');
         }
       }
     }, 2000); // Wait 2 seconds of inactivity before saving
@@ -630,6 +635,22 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                   </div>
                   <p className="text-[10px] font-medium opacity-70 mt-4 italic text-center">Centang item yang sudah Anda siapkan</p>
                 </div>
+
+                {syncStatus === 'quota-exceeded' && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-rose-50 border border-rose-100 p-4 rounded-[24px] flex items-center gap-4"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
+                      <AlertCircle className="w-5 h-5 text-rose-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-black text-rose-800 uppercase leading-none">⚠️ Kuota Sinkronisasi Penuh</p>
+                      <p className="text-[10px] font-medium text-rose-600 leading-tight">Data disimpan sementara di aplikasi ini saja. Database pusat akan aktif kembali besok pagi.</p>
+                    </div>
+                  </motion.div>
+                )}
                 
                 <div className="space-y-3">
                   {dynamicChecklistItems.map((item, i) => (
@@ -1101,8 +1122,8 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
         </div>
       )}
 
-      {/* 1. SEKSI SAPAAN UTAMA (Always at the Top for Logged In Users) */}
-      {user && (
+      {/* A. HEADER SECTION */}
+      {user ? (
         <motion.section 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1145,9 +1166,99 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
             </div>
           </div>
         </motion.section>
+      ) : (
+         <section className="text-center py-8 space-y-4">
+            <img src="https://data.arafahklaten.com/logoarafah.png" className="w-20 h-20 mx-auto" alt="Logo" />
+            <div className="space-y-1">
+              <h1 className="text-2xl font-black text-primary uppercase tracking-tight">KBIHU ARAFAH</h1>
+              <p className="text-[12px] text-neutral-400 font-bold uppercase tracking-widest">Sistem Informasi Manajemen Haji</p>
+            </div>
+         </section>
       )}
 
-      {/* JEMAHA DASHBOARD CONTENT */}
+      {/* B. SEARCH SECTION (Always Visible except for Jemaah when logged in, or always visible) */}
+      {(user?.role !== 'jemaah') && (
+        <section className="space-y-4">
+          <h2 className="text-xs font-black text-emerald-800 uppercase tracking-widest text-center">PENCARIAN JEMAAH</h2>
+          <div className="relative group">
+            <input 
+              type="text" 
+              placeholder="Masukkan Nama atau Porsi..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white border border-neutral-200 rounded-xl py-4 px-6 text-sm font-bold text-neutral-800 placeholder:text-neutral-300 focus:outline-none focus:border-primary transition-all shadow-sm text-center"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1"
+              >
+                <X className="w-4 h-4 text-neutral-400" />
+              </button>
+            )}
+          </div>
+          
+          <AnimatePresence>
+            {searchQuery && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-4"
+              >
+                {searchResults.map((j: any, i) => (
+                  <div key={i} className="bg-white p-6 rounded-[32px] border border-neutral-100 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                       <h3 className="text-lg font-black text-primary uppercase">{j.namaLengkap}</h3>
+                       <span className="text-[10px] font-black bg-neutral-100 px-2 py-1 rounded-lg">Porsi {j.nomorPorsi}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-[10px] uppercase font-black text-neutral-400">
+                      <div>Kloter: <span className="text-neutral-800">{j.kloter || '-'}</span></div>
+                      <div>Hotel: <span className="text-neutral-800">{j.hotelMekah || '-'}</span></div>
+                    </div>
+                  </div>
+                ))}
+                {searchResults.length === 0 && searchQuery.length > 2 && (
+                  <p className="text-center text-[10px] font-bold text-neutral-400 uppercase tracking-widest italic py-4">Data tidak ditemukan</p>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </section>
+      )}
+
+      {/* C. NAVIGATION MENU (Visible to Everyone) */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 px-1">
+           <div className="h-4 w-1 bg-primary rounded-full" />
+           <h2 className="text-xs font-black text-neutral-800 uppercase tracking-widest">Akses Menu Dasbor</h2>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { id: 'profil', icon: <BookOpen />, label: 'Profil KBIHU', color: 'bg-blue-50 text-blue-600' },
+            { id: 'data_pribadi', icon: <UserCircle />, label: 'Data Jemaah', color: 'bg-emerald-50 text-emerald-600' },
+            { id: 'agenda', icon: <Calendar />, label: 'Kegiatan', color: 'bg-orange-50 text-orange-600' },
+            { id: 'materi', icon: <BookOpen />, label: 'Manasik', color: 'bg-indigo-50 text-indigo-600' },
+            { id: 'checklist', icon: <CheckCircle2 />, label: 'Ceklist', color: 'bg-emerald-50 text-emerald-600' },
+            { id: 'payments', icon: <Banknote />, label: 'Keuangan', color: 'bg-yellow-50 text-yellow-600' },
+            { id: 'galeri', icon: <Video />, label: 'Dokumentasi', color: 'bg-rose-50 text-rose-600' },
+            { id: 'kontak', icon: <Phone />, label: 'Bantuan', color: 'bg-emerald-50 text-emerald-600' },
+            { id: 'pengumuman', icon: <Smartphone />, label: 'Info', color: 'bg-primary/10 text-primary' },
+          ].map((item, idx) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveView(item.id)}
+              className="bg-white p-4 rounded-[24px] border border-neutral-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all"
+            >
+              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", item.color)}>
+                {cloneElement(item.icon as ReactElement<any>, { className: "w-5 h-5" })}
+              </div>
+              <span className="text-[9px] font-black text-neutral-600 uppercase text-center leading-tight">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* D. JEMAAH CONTENT (Checklist / Billing) - Only for Logged In Jemaah */}
       {user?.role === 'jemaah' && (
         <motion.div 
           initial={{ opacity: 0 }}
@@ -1229,108 +1340,17 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
               </div>
             </div>
           </section>
-
-          {/* Section: Menu Navigasi Utama */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3 px-1">
-               <div className="h-4 w-1 bg-primary rounded-full" />
-               <h2 className="text-xs font-black text-neutral-800 uppercase tracking-widest">Akses Menu Dasbor</h2>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { id: 'profil', icon: <BookOpen />, label: 'Profil KBIHU', color: 'bg-blue-50 text-blue-600' },
-                { id: 'data_pribadi', icon: <UserCircle />, label: 'Data Jemaah', color: 'bg-emerald-50 text-emerald-600' },
-                { id: 'agenda', icon: <Calendar />, label: 'Kegiatan', color: 'bg-orange-50 text-orange-600' },
-                { id: 'materi', icon: <BookOpen />, label: 'Manasik', color: 'bg-indigo-50 text-indigo-600' },
-                { id: 'checklist', icon: <CheckCircle2 />, label: 'Ceklist', color: 'bg-emerald-50 text-emerald-600' },
-                { id: 'payments', icon: <Banknote />, label: 'Keuangan', color: 'bg-yellow-50 text-yellow-600' },
-                { id: 'galeri', icon: <Video />, label: 'Dokumentasi', color: 'bg-rose-50 text-rose-600' },
-                { id: 'kontak', icon: <Phone />, label: 'Bantuan', color: 'bg-emerald-50 text-emerald-600' },
-                { id: 'pengumuman', icon: <Smartphone />, label: 'Info', color: 'bg-primary/10 text-primary' },
-              ].map((item, idx) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveView(item.id)}
-                  className="bg-white p-4 rounded-[24px] border border-neutral-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all"
-                >
-                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", item.color)}>
-                    {cloneElement(item.icon as ReactElement<any>, { className: "w-5 h-5" })}
-                  </div>
-                  <span className="text-[9px] font-black text-neutral-600 uppercase text-center leading-tight">{item.label}</span>
-                </button>
-              ))}
-            </div>
-          </section>
         </motion.div>
       )}
 
-      {/* GUEST VIEW (Non-logged in) */}
+      {/* E. LOGIN BUTTON (For Guests) */}
       {!user && (
-        <div className="space-y-8">
-           <section className="text-center py-8 space-y-4">
-              <img src="https://data.arafahklaten.com/logoarafah.png" className="w-20 h-20 mx-auto" alt="Logo" />
-              <div className="space-y-1">
-                <h1 className="text-2xl font-black text-primary uppercase tracking-tight">KBIHU ARAFAH</h1>
-                <p className="text-[12px] text-neutral-400 font-bold uppercase tracking-widest">Sistem Informasi Manajemen Haji</p>
-              </div>
-           </section>
-           
-           <button 
-             onClick={() => navigate('/login')}
-             className="w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-200"
-           >
-             Masuk ke Dashboard
-           </button>
-        </div>
-      )}
-
-      {/* ADMIN/PETUGAS BODY */}
-      {(user?.role === 'admin_petugas' || user?.role === 'super_admin') && (
-        <div className="space-y-6">
-          <section className="space-y-4">
-            <h2 className="text-xs font-black text-emerald-800 uppercase tracking-widest text-center">PENCARIAN JEMAAH</h2>
-            <div className="relative group">
-              <input 
-                type="text" 
-                placeholder="Masukkan Nama atau Porsi..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-neutral-200 rounded-xl py-4 px-6 text-sm font-bold text-neutral-800 placeholder:text-neutral-300 focus:outline-none focus:border-primary transition-all shadow-sm text-center"
-              />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1"
-                >
-                  <X className="w-4 h-4 text-neutral-400" />
-                </button>
-              )}
-            </div>
-          </section>
-          
-          <AnimatePresence>
-            {searchQuery && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-4"
-              >
-                {searchResults.map((j: any, i) => (
-                  <div key={i} className="bg-white p-6 rounded-[32px] border border-neutral-100 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between">
-                       <h3 className="text-lg font-black text-primary uppercase">{j.namaLengkap}</h3>
-                       <span className="text-[10px] font-black bg-neutral-100 px-2 py-1 rounded-lg">Porsi {j.nomorPorsi}</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-[10px] uppercase font-black text-neutral-400">
-                      <div>Kloter: <span className="text-neutral-800">{j.kloter || '-'}</span></div>
-                      <div>Hotel: <span className="text-neutral-800">{j.hotelMekah || '-'}</span></div>
-                    </div>
-                  </div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+         <button 
+           onClick={() => navigate('/login')}
+           className="w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-200 active:scale-[0.98] transition-all"
+         >
+           Masuk ke Dashboard
+         </button>
       )}
 
       {/* Shared Utilities (Visible to Everyone) */}
