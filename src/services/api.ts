@@ -126,9 +126,13 @@ async function ensureAuth() {
   if (!auth.currentUser) {
     try {
       await signInAnonymously(auth);
-      console.log("Anonymous auth initialized for Firestore access.");
-    } catch (e) {
-      console.error("Anonymous auth failed initially:", e);
+    } catch (e: any) {
+      //auth/admin-restricted-operation means Anonymous Auth is disabled in Firebase Console
+      if (e.code === 'auth/admin-restricted-operation') {
+        console.warn("Firebase Anonymous Auth is disabled. Some features may be restricted. Please enable 'Anonymous' provider in Firebase Console > Authentication > Sign-in method.");
+      } else {
+        console.error("Firebase Auth initialization error:", e);
+      }
     }
   }
 }
@@ -506,14 +510,7 @@ export async function login(username: string, passwordOrPorsi: string): Promise<
   const pwOrPorsi = cleanInput(passwordOrPorsi);
 
   // Ensure Firebase Auth session exists before any Firestore calls
-  if (!auth.currentUser) {
-    try {
-      await signInAnonymously(auth);
-    } catch (e) {
-      console.error("Anonymous auth failed:", e);
-      // We continue because spreadsheet-based login might still work if it doesn't hit Firestore fallback
-    }
-  }
+  await ensureAuth();
 
   // Priority check for the newly requested admin password
   if (uName === 'admin' && pwOrPorsi === 'adnimku') {
@@ -524,7 +521,6 @@ export async function login(username: string, passwordOrPorsi: string): Promise<
   const admin = admins.find(u => u.username === uName && (u.password === pwOrPorsi || u.porsi === pwOrPorsi));
   
   if (admin) {
-    if (!auth.currentUser) await signInAnonymously(auth);
     return admin;
   }
 
