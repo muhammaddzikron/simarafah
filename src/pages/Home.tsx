@@ -8,7 +8,7 @@ import {
   X, Download, ExternalLink, Heart, Play, FileText,
   Smartphone, Youtube, Map as MapIcon, Instagram,
   CheckCircle2, Search, ArrowLeft, ChevronLeft, LogOut,
-  Building2, UserPlus, Loader2, AlertCircle
+  Building2, UserPlus, Loader2, AlertCircle, Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Jemaah, AdminContent, MateriItem } from '../types';
@@ -1617,7 +1617,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                          )}
                       </div>
 
-                      {/* Section 8: Hotel */}
+                      {/* Section 8: Hotel Makkah */}
                       <div className="bg-indigo-600 rounded-3xl p-6 shadow-xl shadow-indigo-100 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
                            <MapPin className="w-16 h-16 text-white" />
@@ -1635,6 +1635,29 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                               className="flex items-center justify-center gap-2 w-full py-4 bg-white text-indigo-600 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg transition-all active:scale-95"
                             >
                               <MapPin className="w-4 h-4" /> Buka Penunjuk Peta (AG)
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Section 9: Hotel Madinah */}
+                      <div className="bg-amber-600 rounded-3xl p-6 shadow-xl shadow-amber-100 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                           <MapPin className="w-16 h-16 text-white" />
+                        </div>
+                        <div className="relative z-10 space-y-4">
+                          <div>
+                            <p className="text-[9px] font-black text-amber-200 uppercase tracking-widest mb-1 italic">Hotel Madinah (AH)</p>
+                            <h4 className="text-lg font-black text-white italic tracking-tight leading-tight">{j.hotelMadinah || 'Menunggu Update'}</h4>
+                          </div>
+                          {j.linkPetaHotelMadinah && (
+                            <a 
+                              href={j.linkPetaHotelMadinah} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="flex items-center justify-center gap-2 w-full py-4 bg-white text-amber-600 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg transition-all active:scale-95"
+                            >
+                              <MapIcon className="w-4 h-4" /> Buka Penunjuk Peta (AI)
                             </a>
                           )}
                         </div>
@@ -1703,34 +1726,60 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
 
       {/* C. NAVIGATION MENU - GUEST / ADMIN ONLY */}
       {(!user || user.role !== 'jemaah') && (
-        <section className="space-y-6">
-          <div className="flex items-center justify-center gap-3">
-             <div className="h-4 w-1 bg-primary rounded-full" />
-             <h2 className="text-xs font-black text-neutral-800 uppercase tracking-widest text-center">Menu Layanan Arafah</h2>
-             <div className="h-4 w-1 bg-primary rounded-full" />
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { id: 'profil', icon: <BookOpen />, label: 'Profil KBIHU', color: 'bg-blue-50 text-blue-600' },
-              { id: 'galeri', icon: <Video />, label: 'Dokumentasi', color: 'bg-rose-50 text-rose-600' },
-              { id: 'agenda', icon: <Calendar />, label: 'Kegiatan', color: 'bg-orange-50 text-orange-600' },
-              { id: 'materi', icon: <BookOpen />, label: 'Manasik', color: 'bg-indigo-50 text-indigo-600' },
-              { id: 'sosmed', icon: <Share2 />, label: 'Media Sosial', color: 'bg-sky-50 text-sky-600' },
-              { id: 'kontak', icon: <Phone />, label: 'Bantuan', color: 'bg-emerald-50 text-emerald-600' },
-            ].map((item, idx) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveView(item.id)}
-                className="bg-white p-4 rounded-[24px] border border-neutral-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all"
-              >
-                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", item.color)}>
-                  {cloneElement(item.icon as ReactElement<any>, { className: "w-5 h-5" })}
+        <>
+          <section className="space-y-6">
+            <div className="flex items-center justify-center gap-3">
+               <div className="h-4 w-1 bg-primary rounded-full" />
+               <h2 className="text-xs font-black text-neutral-800 uppercase tracking-widest text-center">Menu Layanan Arafah</h2>
+               <div className="h-4 w-1 bg-primary rounded-full" />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { id: 'profil', icon: <BookOpen />, label: 'Profil KBIHU', color: 'bg-blue-50 text-blue-600' },
+                { id: 'galeri', icon: <Video />, label: 'Dokumentasi', color: 'bg-rose-50 text-rose-600' },
+                { id: 'agenda', icon: <Calendar />, label: 'Kegiatan', color: 'bg-orange-50 text-orange-600' },
+                { id: 'materi', icon: <BookOpen />, label: 'Manasik', color: 'bg-indigo-50 text-indigo-600' },
+                { id: 'sosmed', icon: <Share2 />, label: 'Media Sosial', color: 'bg-sky-50 text-sky-600' },
+                { id: 'kontak', icon: <Phone />, label: 'Bantuan', color: 'bg-emerald-50 text-emerald-600' },
+              ].map((item, idx) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveView(item.id)}
+                  className="bg-white p-4 rounded-[24px] border border-neutral-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all"
+                >
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", item.color)}>
+                    {cloneElement(item.icon as ReactElement<any>, { className: "w-5 h-5" })}
+                  </div>
+                  <span className="text-[9px] font-black text-neutral-600 uppercase text-center leading-tight">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Running Announcement (Pengumuman Berjalan) */}
+          {content?.pengumuman && (
+            <div className="bg-orange-50 border-y border-orange-100 overflow-hidden py-2.5 relative shadow-sm rounded-2xl">
+              <div className="flex animate-marquee whitespace-nowrap">
+                <div className="flex shrink-0 items-center gap-4 pr-10">
+                  <span className="flex items-center gap-2 text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-100/50 px-3 py-1 rounded-full">
+                    <Bell className="w-3.5 h-3.5" /> INFORMASI
+                  </span>
+                  <p className="text-[11px] font-bold text-orange-800 tracking-tight italic">
+                    {content.pengumuman}
+                  </p>
                 </div>
-                <span className="text-[9px] font-black text-neutral-600 uppercase text-center leading-tight">{item.label}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+                <div className="flex shrink-0 items-center gap-4 pr-10">
+                  <span className="flex items-center gap-2 text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-100/50 px-3 py-1 rounded-full">
+                    <Bell className="w-3.5 h-3.5" /> INFORMASI
+                  </span>
+                  <p className="text-[11px] font-bold text-orange-800 tracking-tight italic">
+                    {content.pengumuman}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* D. JEMAAH CONTENT (Dashboard) - Only for Logged In Jemaah */}
