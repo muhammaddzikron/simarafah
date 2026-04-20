@@ -9,7 +9,7 @@ import {
   Database, Share2, Youtube, Instagram, MapPin,
   Smartphone, FileText, Video, Heart, Stethoscope,
   Wind, Map, Shield, MoreVertical, Key, Banknote,
-  LogOut, Menu, Calendar, RefreshCw, BookOpen, AlertTriangle
+  LogOut, Menu, Calendar, RefreshCw, BookOpen, AlertTriangle, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Jemaah, AdminContent, Registration } from '../types';
@@ -29,7 +29,7 @@ type Tab = 'data' | 'registrations' | 'konten' | 'admin';
 
 export default function AdminDashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
   if (!user) return null;
-  const [activeTab, setActiveTab] = useState<Tab>('registrations'); // Default to registrations for now to see it
+  const [activeTab, setActiveTab] = useState<Tab>('data'); // Default changed from registrations to data as requested
   const [contentTab, setContentTab] = useState<'umum' | 'agenda' | 'doa' | 'teks' | 'video' | 'download' | 'galeri' | 'layanan'>('umum');
   const [jemaah, setJemaah] = useState<Jemaah[]>([]);
   const [content, setContent] = useState<AdminContent>(defaultAdminContent);
@@ -68,7 +68,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
       setIsSavingContent(true);
       await saveAdminContent(content);
       setLastSaved(new Date());
-      showToast('Konten berhasil disimpan ke Cloud Firebase!');
+      showToast('✅ Seluruh Konten Berhasil Diperbarui di Cloud Firebase!');
     } catch (err: any) {
       console.error("Error saving content:", err);
       let errorMsg = 'Gagal menyimpan ke Cloud. Periksa koneksi internet Anda atau hubungi sistem admin.';
@@ -865,7 +865,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                         </td>
                         <td className="px-6 py-4">
                           <a href={`https://wa.me/${(j.wa || '').replace(/[^0-9]/g, '')}`} target="_blank" className="flex items-center gap-1.5 text-emerald-600 font-black text-[11px] hover:underline">
-                            <Smartphone className="w-3.5 h-3.5" /> {j.wa || '-'}
+                            <Smartphone className="w-3.5 h-3.5" /> {(j.wa || '').replace(/[^0-9]/g, '') || '-'}
                           </a>
                         </td>
                         <td className="px-6 py-4 text-[12px] font-bold text-neutral-600">{j.kloter}</td>
@@ -886,7 +886,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                         <td className="px-6 py-4">
                           {j.waKarom ? (
                             <a href={`https://wa.me/${j.waKarom.replace(/[^0-9]/g, '')}`} target="_blank" className="flex items-center gap-1.5 text-emerald-600 font-black text-[11px] hover:underline">
-                              <Smartphone className="w-3.5 h-3.5" /> {j.waKarom}
+                              <Smartphone className="w-3.5 h-3.5" /> {j.waKarom.replace(/[^0-9]/g, '')}
                             </a>
                           ) : '-'}
                         </td>
@@ -1109,6 +1109,25 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                   <LayoutDashboard className="w-3.5 h-3.5" /> Optimalisasi Konten & Layanan Aplikasi
                 </p>
               </div>
+
+              <div className="flex items-center gap-3">
+                {lastSaved && (
+                   <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span className="text-[9px] font-black uppercase tracking-wider">Tersimpan: {lastSaved.toLocaleTimeString('id-id', { hour: '2-digit', minute: '2-digit' })}</span>
+                   </div>
+                )}
+                <button 
+                  onClick={handleSaveContent}
+                  disabled={isSavingContent}
+                  className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50 ring-4 ring-primary/5"
+                >
+                  {isSavingContent ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isSavingContent ? 'Menyimpan...' : 'Simpan Seluruh Konten'}
+                </button>
+              </div>
+            </header>
+
             <div className="relative group">
               <div className="flex bg-neutral-100/80 backdrop-blur-sm p-1.5 rounded-2xl overflow-x-auto no-scrollbar gap-1">
                 {[
@@ -1135,7 +1154,6 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
               </div>
               <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-neutral-100/50 to-transparent pointer-events-none md:hidden" />
             </div>
-            </header>
 
             <AnimatePresence mode="wait">
               {contentTab === 'umum' && (
@@ -2926,28 +2944,4 @@ function IconInput({ icon, value, onChange, label, type = 'text' }: { icon: any;
   );
 }
 
-function Loader2(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 2v4" />
-      <path d="M12 18v4" />
-      <path d="M4.93 4.93l2.83 2.83" />
-      <path d="M16.24 16.24l2.83 2.83" />
-      <path d="M2 12h4" />
-      <path d="M18 12h4" />
-      <path d="M4.93 19.07l2.83-2.83" />
-      <path d="M16.24 7.76l2.83-2.83" />
-    </svg>
-  );
-}
+
