@@ -16,7 +16,8 @@ import { User, Jemaah, AdminContent, Registration } from '../types';
 import { 
   fetchJemaah, getAdminContent, saveAdminContent, 
   getAdminUsers, saveAdminUsers, getRegistrations,
-  deleteRegistration, updateRegistrationStatus, updateRegistration
+  deleteRegistration, updateRegistrationStatus, updateRegistration,
+  defaultAdminContent
 } from '../services/api';
 import { cn } from '../lib/utils';
 import * as XLSX from 'xlsx';
@@ -30,7 +31,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
   const [activeTab, setActiveTab] = useState<Tab>('registrations'); // Default to registrations for now to see it
   const [contentTab, setContentTab] = useState<'umum' | 'agenda' | 'doa' | 'teks' | 'video' | 'download' | 'galeri' | 'layanan'>('umum');
   const [jemaah, setJemaah] = useState<Jemaah[]>([]);
-  const [content, setContent] = useState<AdminContent | null>(null);
+  const [content, setContent] = useState<AdminContent>(defaultAdminContent);
   const [admins, setAdmins] = useState<User[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +112,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
       ]);
       
       setJemaah(dataJ || []);
-      setContent(dataC);
+      if (dataC) setContent(dataC);
       setAdmins(dataA || []);
       setRegistrations(dataR || []);
     } catch (err: any) {

@@ -69,7 +69,8 @@ service cloud.firestore {
     // registrations collection
     match /registrations/{regId} {
       allow create: if isValidId(regId) && isValidRegistration(incoming());
-      allow get, list, update, delete: if isSignedIn() && isValidId(regId);
+      allow get, update, delete: if isSignedIn() && isValidId(regId);
+      allow list: if isSignedIn();
       
       allow update: if isSignedIn() && (
         // Action: Update status

@@ -13,7 +13,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Jemaah, AdminContent, MateriItem } from '../types';
 import { GoogleGenAI } from "@google/genai";
-import { fetchJemaah, getAdminContent } from '../services/api';
+import { fetchJemaah, getAdminContent, defaultAdminContent } from '../services/api';
 import { cn } from '../lib/utils';
 import { Phone } from 'lucide-react';
 import { db, dbDefault } from '../lib/firebase';
@@ -60,7 +60,7 @@ const prayerTimesSaudi = [
 export default function Home({ user, onLogout }: { user: User | null, onLogout?: () => void }) {
   const navigate = useNavigate();
   const ai = useMemo(() => getAI(), []);
-  const [content, setContent] = useState<AdminContent | null>(null);
+  const [content, setContent] = useState<AdminContent>(defaultAdminContent);
   const [jemaah, setJemaah] = useState<Jemaah[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeView = searchParams.get('view');
@@ -89,8 +89,8 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
           getAdminContent(),
           fetchJemaah()
         ]);
-        setContent(data);
-        setJemaah(dataJ);
+        if (data) setContent(data);
+        setJemaah(dataJ || []);
         setDbStatus('ok');
       } catch (err) {
         console.error("Initial data load failed:", err);
@@ -941,7 +941,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
             </>
           )}
 
-          {activeView === 'sosmed' && (
+          {activeView === 'sosmed' && content && (
             <>
               <ViewHeader title="Media Sosial" icon={<Smartphone className="w-5 h-5" />} />
               <div className="grid grid-cols-1 gap-4">
@@ -969,14 +969,14 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                   </div>
                   <ChevronRight className="w-5 h-5 text-white/30 group-hover:translate-x-1 transition-transform" />
                 </a>
-                <a href={content?.sosmed.yt && (content.sosmed.yt.startsWith('http') ? content.sosmed.yt : `https://youtube.com/${content.sosmed.yt.startsWith('@') ? content.sosmed.yt : '@' + content.sosmed.yt}`)} target="_blank" className="flex items-center justify-between p-5 bg-white rounded-3xl border border-neutral-100 shadow-sm group">
+                <a href={content?.sosmed?.yt && (content.sosmed.yt.startsWith('http') ? content.sosmed.yt : `https://youtube.com/${content.sosmed.yt.startsWith('@') ? content.sosmed.yt : '@' + content.sosmed.yt}`)} target="_blank" className="flex items-center justify-between p-5 bg-white rounded-3xl border border-neutral-100 shadow-sm group">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center">
                       <Youtube className="w-6 h-6" />
                     </div>
                     <div>
                       <p className="text-[13px] font-black text-neutral-800 uppercase tracking-tight">YouTube</p>
-                      <p className="text-[10px] text-red-600 font-bold tracking-widest uppercase">{content?.sosmed.yt.startsWith('@') ? content.sosmed.yt : '@' + content.sosmed.yt}</p>
+                      <p className="text-[10px] text-red-600 font-bold tracking-widest uppercase">{content?.sosmed?.yt ? (content.sosmed.yt.startsWith('@') ? content.sosmed.yt : '@' + content.sosmed.yt) : ''}</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-neutral-300 group-hover:translate-x-1 transition-transform" />

@@ -10,7 +10,13 @@ const SPREADSHEET_CONTENT_URL = 'https://docs.google.com/spreadsheets/d/14W48hU9
 // Helper to get from local storage
 const getStorage = <T>(key: string, initial: T): T => {
   const saved = localStorage.getItem(key);
-  return saved ? JSON.parse(saved) : initial;
+  if (!saved) return initial;
+  try {
+    const data = JSON.parse(saved);
+    return (data === null || data === undefined) ? initial : data;
+  } catch {
+    return initial;
+  }
 };
 
 // Helper to save to local storage
@@ -424,7 +430,9 @@ export async function getAdminContent(): Promise<AdminContent> {
     if (!recoveredData || !recoveredData.materi || recoveredData.materi.length === 0) {
       const collectionsToTry = [
         { db: db, name: 'materi', label: 'DB-Config: materi (col)' },
-        { db: dbDefault, name: 'materi', label: 'DB-Default: materi (col)' }
+        { db: dbDefault, name: 'materi', label: 'DB-Default: materi (col)' },
+        { db: db, name: 'admin_content', label: 'DB-Config: admin_content (col)' },
+        { db: dbDefault, name: 'admin_content', label: 'DB-Default: admin_content (col)' }
       ];
 
       for (const col of collectionsToTry) {
@@ -445,7 +453,19 @@ export async function getAdminContent(): Promise<AdminContent> {
 
     if (recoveredData) {
       console.log("--- End of Deep Search: Success ---");
-      return recoveredData;
+      // Result must be merged with defaults to prevent crashes (e.g. missing sosmed)
+      return {
+        ...defaultAdminContent,
+        ...recoveredData,
+        sosmed: { ...defaultAdminContent.sosmed, ...(recoveredData.sosmed || {}) },
+        kontak: { ...defaultAdminContent.kontak, ...(recoveredData.kontak || {}) },
+        agenda: recoveredData.agenda || defaultAdminContent.agenda,
+        materi: recoveredData.materi || defaultAdminContent.materi,
+        galeri: recoveredData.galeri || defaultAdminContent.galeri,
+        pembayaran: recoveredData.pembayaran || defaultAdminContent.pembayaran,
+        kontakPetugas: recoveredData.kontakPetugas || defaultAdminContent.kontakPetugas,
+        perlengkapan: recoveredData.perlengkapan || defaultAdminContent.perlengkapan
+      };
     }
 
     console.log("--- End of Deep Search: No Firestore data found. Using fallback source. ---");
