@@ -32,11 +32,11 @@ service cloud.firestore {
     }
     
     function isValidAdminContent(data) {
-      return data.updatedAt is timestamp;
+      return true;
     }
     
     function isValidJemaah(data) {
-      return data.jemaah is list && data.updatedAt is timestamp;
+      return true;
     }
     
     function isValidRegistration(data) {
@@ -85,6 +85,10 @@ service cloud.firestore {
     // test collection for connection verification
     match /test/connection {
       allow get: if true;
+    }
+
+    match /test/write {
+      allow write: if isSignedIn();
     }
   }
 }

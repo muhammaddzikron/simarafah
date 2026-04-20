@@ -17,7 +17,8 @@ import {
   fetchJemaah, getAdminContent, saveAdminContent, 
   getAdminUsers, saveAdminUsers, getRegistrations,
   deleteRegistration, updateRegistrationStatus, updateRegistration,
-  defaultAdminContent, forceResetLocalData, testFirebaseConnection
+  defaultAdminContent, forceResetLocalData, testFirebaseConnection,
+  testWriteCloud
 } from '../services/api';
 import { cn } from '../lib/utils';
 import * as XLSX from 'xlsx';
@@ -125,6 +126,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
       ]);
       
       setCloudStatus(status as any);
+      setJemaah(dataJ || []);
       if (dataC) setContent(dataC);
       setAdmins(dataA || []);
       setRegistrations(dataR || []);
@@ -2097,7 +2099,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
         {activeTab === 'admin' && (
           <section className="space-y-10 max-w-5xl">
             {/* Cloud Status Card */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-white p-6 rounded-3xl border border-neutral-100 shadow-sm flex items-center gap-4">
                 <div className={cn(
                   "w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm",
@@ -2110,9 +2112,21 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                   <div className="flex items-center gap-2">
                     <div className={cn("w-2 h-2 rounded-full", cloudStatus === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500')} />
                     <span className="text-[10px] font-bold text-neutral-800 uppercase tracking-tighter">
-                      {cloudStatus === 'online' ? 'Terhubung & Sinkron' : 'Koneksi Terputus'}
+                      {cloudStatus === 'online' ? 'Terhubung' : 'Terputus'}
                     </span>
                   </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-3xl border border-neutral-100 shadow-sm flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-[11px] font-black text-neutral-400 uppercase tracking-widest leading-none mb-1.5">Data Jemaah</h3>
+                  <p className="text-[10px] font-bold text-neutral-800 uppercase tracking-tighter">
+                    {jemaah.length} Terdeteksi
+                  </p>
                 </div>
               </div>
               
@@ -2121,7 +2135,7 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                   <Clock className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-[11px] font-black text-neutral-400 uppercase tracking-widest leading-none mb-1.5">Update Terakhir</h3>
+                  <h3 className="text-[11px] font-black text-neutral-400 uppercase tracking-widest leading-none mb-1.5">Update Simpan</h3>
                   <p className="text-[10px] font-bold text-neutral-800 uppercase tracking-tighter">
                     {lastSaved ? lastSaved.toLocaleTimeString('id-ID') : 'Belum Sinkron'}
                   </p>
@@ -2136,6 +2150,36 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                 <RefreshCw className={cn("w-5 h-5", refreshing && "animate-spin")} />
                 <span className="text-[11px] font-black uppercase tracking-widest">Sync Ulang Cloud</span>
               </button>
+            </div>
+
+            {/* Diagnostic Tools */}
+            <div className="bg-neutral-50 rounded-3xl p-6 border border-neutral-200 border-dashed space-y-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-neutral-400" />
+                <h4 className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Tool Diagnostik (Vercel Fix)</h4>
+              </div>
+              <div className="flex flex-col md:flex-row gap-3">
+                <button 
+                  onClick={async () => {
+                    try {
+                      showToast('Mengetes tulis ke Cloud...');
+                      await testWriteCloud();
+                      showToast('DIAGNOSTIK: Tulis Cloud BERHASIL! Database Anda siap digunakan.', 'success');
+                    } catch (e: any) {
+                      showToast(`DIAGNOSTIK GAGAL: ${e.message}`, 'error');
+                    }
+                  }}
+                  className="flex-1 py-3 bg-white border border-neutral-200 text-neutral-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-neutral-100 transition-all flex items-center justify-center gap-2"
+                >
+                  <Database className="w-3.5 h-3.5" /> Verifikasi Tulis Cloud
+                </button>
+                <div className="flex-1 p-3 bg-white/50 rounded-2xl border border-neutral-100 flex items-center gap-3">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" />
+                  <p className="text-[9px] font-bold text-neutral-400 uppercase leading-none">
+                    Jika tes gagal, pastikan Vercel sudah di-allowlist di Firebase Console.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">

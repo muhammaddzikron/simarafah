@@ -10,7 +10,7 @@ const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/14W48hU9eYzxZ5Ek
 const SPREADSHEET_CONTENT_URL = 'https://docs.google.com/spreadsheets/d/14W48hU9eYzxZ5EkjGGSTs1WCTzITV02QooOoo7lYix0/export?format=csv&gid=1724714709';
 
 // Storage keys with versioning to force refresh on logic change
-const STORAGE_VER = 'v4';
+const STORAGE_VER = 'v5';
 const KEY_JEMAAH = `jemaah_data_${STORAGE_VER}`;
 const KEY_CONTENT = `admin_content_${STORAGE_VER}`;
 const KEY_USERS = `admin_users_${STORAGE_VER}`;
@@ -93,12 +93,12 @@ Saat ini, KBIHU Arafah Muhammadiyah Klaten dipimpin oleh Dr. dr. H. Husen Prabow
   ],
   materi: [
     { id: '1', judul: 'Doa Sebelum Berangkat', tipe: 'doa', isi: { arab: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ أَنْ أَضِلَّ أَوْ أُضَلَّ', latin: 'Allahumma inni auzubika an adilla aw udalla', terjemahan: 'Ya Allah, aku berlindung kepada-Mu dari tersesat atau disesatkan.' } },
-    { id: '2', judul: 'Video Cara Berpakaian Ihram', link: 'https://youtube.com', tipe: 'video' },
+    { id: '2', judul: 'Video Profil Arafah', link: 'https://www.youtube.com/watch?v=zcgRIpUf6S0', tipe: 'video' },
     { id: '3', judul: 'File PDF Manasik', link: '#', tipe: 'download' }
   ],
   sosmed: {
-    ig: 'arafahklaten',
-    tiktok: 'arafahklaten',
+    ig: '@arafahklaten',
+    tiktok: '@arafahklaten',
     yt: '@arafahklaten'
   },
   kontak: {
@@ -682,6 +682,22 @@ export async function saveAdminContent(content: AdminContent) {
     console.error("Error saving admin content to Firebase:", e);
     saveStorage(KEY_CONTENT, content);
     throw e; // Relaunch to let UI show error
+  }
+}
+
+export async function testWriteCloud() {
+  try {
+    await ensureAuth();
+    console.log("Firebase Diagnostic: Testing simple write to 'test/write'...");
+    await setDoc(doc(db, 'test', 'write'), {
+      test: true,
+      at: serverTimestamp()
+    });
+    console.log("Firebase Diagnostic: Write SUCCESS.");
+    return true;
+  } catch (e) {
+    console.error("Firebase Diagnostic: Write FAILED:", e);
+    throw e;
   }
 }
 
