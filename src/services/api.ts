@@ -108,8 +108,14 @@ Saat ini, KBIHU Arafah Muhammadiyah Klaten dipimpin oleh Dr. dr. H. Husen Prabow
   ],
   materi: [
     { id: '1', judul: 'Doa Sebelum Berangkat', tipe: 'doa', isi: { arab: 'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ أَنْ أَضِلَّ أَوْ أُضَلَّ', latin: 'Allahumma inni auzubika an adilla aw udalla', terjemahan: 'Ya Allah, aku berlindung kepada-Mu dari tersesat atau disesatkan.' } },
-    { id: '2', judul: 'Video Profil Arafah', link: 'https://www.youtube.com/watch?v=zcgRIpUf6S0', tipe: 'video' },
-    { id: '3', judul: 'File PDF Manasik', link: '#', tipe: 'download' }
+    { id: 'v1', judul: 'Materi Manasik Video 1', link: 'https://www.youtube.com/watch?v=KCtpmbxLTus', tipe: 'video' },
+    { id: 'v2', judul: 'Materi Manasik Video 2', link: 'https://www.youtube.com/watch?v=MP9-mVI5Zuc', tipe: 'video' },
+    { id: 'v3', judul: 'Materi Manasik Video 3', link: 'https://www.youtube.com/watch?v=lUl1WTxSu1k', tipe: 'video' },
+    { id: 'v4', judul: 'Materi Manasik Video 4', link: 'https://www.youtube.com/watch?v=0cBVaAaby6E', tipe: 'video' },
+    { id: 'v5', judul: 'Materi Manasik Video 5', link: 'https://www.youtube.com/watch?v=eL9GwCFPRCU', tipe: 'video' },
+    { id: 'v6', judul: 'Materi Manasik Video 6', link: 'https://www.youtube.com/watch?v=V79Lmfw_Q8c', tipe: 'video' },
+    { id: 'v7', judul: 'Materi Manasik Video 7', link: 'https://www.youtube.com/watch?v=bGKLYDijNFg', tipe: 'video' },
+    { id: '3', judul: 'Materi Manasik (Google Drive)', link: 'https://drive.google.com/drive/folders/1EOrDF6Dq9ItaJCl20BvTVtmCxugMycgV', tipe: 'download' }
   ],
   sosmed: {
     ig: 'arafahklaten',

@@ -1360,6 +1360,38 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                     <ExternalLink className="w-3.5 h-3.5" /> Google Maps
                   </a>
                 </div>
+
+                {/* Kontak Karom Section */}
+                {kontakPetugas.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 px-1">
+                      <div className="w-1.5 h-4 bg-primary rounded-full" />
+                      <h4 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Kontak Ketua Rombongan (Karom)</h4>
+                    </div>
+                    <div className="space-y-3">
+                      {kontakPetugas.map((karom, i) => (
+                        <div key={i} className="bg-white rounded-[24px] p-5 border border-neutral-100 shadow-sm flex items-center justify-between group hover:border-emerald-100 transition-colors">
+                          <div className="space-y-1">
+                            <h5 className="text-sm font-black text-neutral-800 uppercase tracking-tight">{karom.nama}</h5>
+                            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wide">
+                              Kloter {karom.kloter} • Rombongan {karom.rombongan}
+                            </p>
+                          </div>
+                          {karom.wa && (
+                            <a 
+                              href={`https://wa.me/${formatWA(karom.wa)}`} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase shadow-lg shadow-emerald-100 transition-all active:scale-95"
+                            >
+                              <Smartphone className="w-3.5 h-3.5" /> Chat WA
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}
