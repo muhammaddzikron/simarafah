@@ -43,18 +43,18 @@ const menuItems = [
 
 const prayerTimesIndo = [
   { name: 'Subuh', time: '04:29' },
-  { name: 'Zuhur', time: '11:37' },
+  { name: 'Zuhur', time: '11:36' },
   { name: 'Ashar', time: '14:58' },
-  { name: 'Maghrib', time: '17:34' },
-  { name: 'Isya', time: '18:45' },
+  { name: 'Maghrib', time: '17:33' },
+  { name: 'Isya', time: '18:44' },
 ];
 
 const prayerTimesSaudi = [
-  { name: 'Subuh', time: '04:40' },
+  { name: 'Subuh', time: '04:39' },
   { name: 'Zuhur', time: '12:20' },
-  { name: 'Ashar', time: '15:43' },
-  { name: 'Maghrib', time: '18:41' },
-  { name: 'Isya', time: '20:11' },
+  { name: 'Ashar', time: '15:42' },
+  { name: 'Maghrib', time: '18:42' },
+  { name: 'Isya', time: '20:12' },
 ];
 
 export default function Home({ user, onLogout }: { user: User | null, onLogout?: () => void }) {
@@ -1166,17 +1166,9 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
             </div>
           </div>
         </motion.section>
-      ) : (
-         <section className="text-center py-8 space-y-4">
-            <img src="https://data.arafahklaten.com/logoarafah.png" className="w-20 h-20 mx-auto" alt="Logo" />
-            <div className="space-y-1">
-              <h1 className="text-2xl font-black text-primary uppercase tracking-tight">KBIHU ARAFAH</h1>
-              <p className="text-[12px] text-neutral-400 font-bold uppercase tracking-widest">Sistem Informasi Manajemen Haji</p>
-            </div>
-         </section>
-      )}
+      ) : null}
 
-      {/* B. SEARCH SECTION (Always Visible except for Jemaah when logged in, or always visible) */}
+      {/* B. SEARCH SECTION */}
       {(user?.role !== 'jemaah') && (
         <section className="space-y-4">
           <h2 className="text-xs font-black text-emerald-800 uppercase tracking-widest text-center">PENCARIAN JEMAAH</h2>
@@ -1206,14 +1198,112 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                 className="space-y-4"
               >
                 {searchResults.map((j: any, i) => (
-                  <div key={i} className="bg-white p-6 rounded-[32px] border border-neutral-100 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between">
-                       <h3 className="text-lg font-black text-primary uppercase">{j.namaLengkap}</h3>
-                       <span className="text-[10px] font-black bg-neutral-100 px-2 py-1 rounded-lg">Porsi {j.nomorPorsi}</span>
+                  <div key={i} className="bg-white rounded-[32px] border border-neutral-100 shadow-sm overflow-hidden">
+                    <div className="bg-emerald-600 p-5 text-center">
+                       <h3 className="text-lg font-black text-white uppercase">{j.namaLengkap}</h3>
+                       <div className="mt-1 inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-lg text-[9px] font-black text-white uppercase border border-white/10 italic tracking-widest">
+                          Porsi: {j.nomorPorsi} • No: {j.no}
+                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-[10px] uppercase font-black text-neutral-400">
-                      <div>Kloter: <span className="text-neutral-800">{j.kloter || '-'}</span></div>
-                      <div>Hotel: <span className="text-neutral-800">{j.hotelMekah || '-'}</span></div>
+                    
+                    <div className="p-6 space-y-4">
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                        <div className="space-y-1">
+                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Kloter / Rombongan</p>
+                          <p className="text-[11px] font-bold text-neutral-800">{j.kloter || '-'} / Romb. {j.rombongan || '-'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Masuk Asrama</p>
+                          <p className="text-[11px] font-bold text-neutral-800">{j.jadwalMasukAsrama || '-'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Umur / Kelamin</p>
+                          <p className="text-[11px] font-bold text-neutral-800">{j.umur || '-'} Thn / {j.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Tanazul / Murur</p>
+                          <p className="text-[11px] font-bold text-neutral-800">{j.tanazul || 'Tidak'} / {j.murur || 'Tidak'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Nafar / Dam</p>
+                          <p className="text-[11px] font-bold text-neutral-800">{j.nafar || '-'} / {j.jalurDam || '-'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Umrah Gel. / Badal</p>
+                          <p className="text-[11px] font-bold text-neutral-800">{j.umrahGelombang || '-'} / {j.badal || 'Tidak'}</p>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-neutral-50 rounded-2xl space-y-2">
+                        <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Alamat Lengkap</p>
+                        <p className="text-[10px] font-bold text-neutral-700 leading-relaxed uppercase">
+                          {j.alamat}, {j.desa}, {j.kecamatan}, {j.kabupaten}
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                         {/* Ketua Rombongan */}
+                         <div className="bg-white border border-neutral-100 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                            <div className="space-y-0.5">
+                               <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest">Ketua Rombongan</p>
+                               <p className="text-[11px] font-black text-neutral-800">{j.namaKetuaRombongan || '-'}</p>
+                            </div>
+                            <div className="flex gap-2">
+                               <a href={`tel:${j.waKarom}`} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm active:scale-95 transition-all">
+                                  <Phone className="w-3.5 h-3.5" />
+                               </a>
+                               <a href={`https://wa.me/${String(j.waKarom).replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm active:scale-95 transition-all">
+                                  <Smartphone className="w-3.5 h-3.5" />
+                               </a>
+                            </div>
+                         </div>
+                         
+                         {/* Pendamping */}
+                         <div className="bg-white border border-neutral-100 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                            <div className="space-y-0.5">
+                               <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest">Pendamping Lansia</p>
+                               <p className="text-[11px] font-black text-neutral-800">{j.pendampingLansia || '-'}</p>
+                            </div>
+                            {j.waPendamping && (
+                              <div className="flex gap-2">
+                                <a href={`tel:${j.waPendamping}`} className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm active:scale-95 transition-all">
+                                    <Phone className="w-3.5 h-3.5" />
+                                </a>
+                                <a href={`https://wa.me/${String(j.waPendamping).replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shadow-sm active:scale-95 transition-all">
+                                    <Smartphone className="w-3.5 h-3.5" />
+                                </a>
+                              </div>
+                            )}
+                         </div>
+
+                         {/* Hotel */}
+                         <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                            <div className="space-y-0.5">
+                               <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Hotel Mekah</p>
+                               <p className="text-[11px] font-black text-emerald-900">{j.hotelMekah || '-'}</p>
+                            </div>
+                            {j.linkPetaHotel && (
+                              <a href={j.linkPetaHotel} target="_blank" rel="noreferrer" className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md shadow-emerald-200 active:scale-95 transition-all flex items-center gap-2">
+                                 <MapPin className="w-3 h-3" /> Peta
+                              </a>
+                            )}
+                         </div>
+                      </div>
+
+                      {/* Kesehatan Pills */}
+                      <div className="flex flex-wrap gap-2">
+                         {j.kursiRoda === 'YA' && <span className="px-2 py-1 bg-rose-50 text-rose-600 rounded-lg text-[8px] font-black uppercase border border-rose-100 italic">♿ Kursi Roda</span>}
+                         {j.tongkat === 'YA' && <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded-lg text-[8px] font-black uppercase border border-amber-100 italic">🦯 Tongkat/Kruk</span>}
+                         {j.penTubuh === 'YA' && <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[8px] font-black uppercase border border-indigo-100 italic">🦴 Pen Tubuh</span>}
+                         {j.ringJantung === 'YA' && <span className="px-2 py-1 bg-rose-50 text-rose-600 rounded-lg text-[8px] font-black uppercase border border-rose-100 italic">❤️ Ring Jantung</span>}
+                      </div>
+
+                      <div className="pt-4 border-t border-neutral-50 flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                            <Smartphone className="w-3.5 h-3.5 text-neutral-300" />
+                            <span className="text-[10px] font-bold text-neutral-400">{j.wa || '-'}</span>
+                         </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1226,23 +1316,21 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
         </section>
       )}
 
-      {/* C. NAVIGATION MENU (Visible to Everyone) */}
+      {/* C. NAVIGATION MENU */}
       <section className="space-y-6">
-        <div className="flex items-center gap-3 px-1">
+        <div className="flex items-center justify-center gap-3">
            <div className="h-4 w-1 bg-primary rounded-full" />
-           <h2 className="text-xs font-black text-neutral-800 uppercase tracking-widest">Akses Menu Dasbor</h2>
+           <h2 className="text-xs font-black text-neutral-800 uppercase tracking-widest text-center">Menu Layanan Arafah</h2>
+           <div className="h-4 w-1 bg-primary rounded-full" />
         </div>
         <div className="grid grid-cols-3 gap-3">
           {[
             { id: 'profil', icon: <BookOpen />, label: 'Profil KBIHU', color: 'bg-blue-50 text-blue-600' },
-            { id: 'data_pribadi', icon: <UserCircle />, label: 'Data Jemaah', color: 'bg-emerald-50 text-emerald-600' },
+            { id: 'galeri', icon: <Video />, label: 'Dokumentasi', color: 'bg-rose-50 text-rose-600' },
             { id: 'agenda', icon: <Calendar />, label: 'Kegiatan', color: 'bg-orange-50 text-orange-600' },
             { id: 'materi', icon: <BookOpen />, label: 'Manasik', color: 'bg-indigo-50 text-indigo-600' },
-            { id: 'checklist', icon: <CheckCircle2 />, label: 'Ceklist', color: 'bg-emerald-50 text-emerald-600' },
-            { id: 'payments', icon: <Banknote />, label: 'Keuangan', color: 'bg-yellow-50 text-yellow-600' },
-            { id: 'galeri', icon: <Video />, label: 'Dokumentasi', color: 'bg-rose-50 text-rose-600' },
+            { id: 'sosmed', icon: <Share2 />, label: 'Media Sosial', color: 'bg-sky-50 text-sky-600' },
             { id: 'kontak', icon: <Phone />, label: 'Bantuan', color: 'bg-emerald-50 text-emerald-600' },
-            { id: 'pengumuman', icon: <Smartphone />, label: 'Info', color: 'bg-primary/10 text-primary' },
           ].map((item, idx) => (
             <button
               key={item.id}
@@ -1343,90 +1431,78 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
         </motion.div>
       )}
 
-      {/* E. LOGIN BUTTON (For Guests) */}
-      {!user && (
-         <button 
-           onClick={() => navigate('/login')}
-           className="w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-200 active:scale-[0.98] transition-all"
-         >
-           Masuk ke Dashboard
-         </button>
-      )}
+      {/* E. LOGIN BUTTON (For Guests) - Removed as requested */}
 
       {/* Shared Utilities (Visible to Everyone) */}
       <section className="space-y-6 pt-6 border-t border-neutral-100">
-        <div className="flex flex-col items-center gap-2 mb-8">
-           <div className="px-4 py-1.5 bg-primary/5 rounded-full border border-primary/10">
-             <span className="text-[10px] font-black text-primary uppercase tracking-[0.25em]">Tools Umum</span>
-           </div>
-           <h2 className="text-sm font-black text-neutral-800 uppercase tracking-tight">Kebutuhan Harian Jemaah</h2>
-        </div>
-
         {/* Jam Dunia & Jadwal Salat */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white overflow-hidden rounded-[32px] border border-neutral-100 shadow-sm">
-            <div className="bg-primary/5 p-5 flex items-center justify-between border-b border-primary/10">
-              <div className="flex items-center gap-3">
-                 <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-                    <Clock className="w-4 h-4 text-primary" />
-                 </div>
-                 <span className="text-[10px] font-black text-neutral-800 uppercase tracking-wider">Jam Dunia</span>
-              </div>
-              <span className="text-[9px] font-black text-primary bg-white px-2 py-1 rounded-lg border border-primary/10 uppercase tracking-wider">WIB vs WAS</span>
-            </div>
-            
-            <div className="p-6 grid grid-cols-2 gap-4 relative">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-neutral-50 flex items-center justify-center z-10 border border-white">
-                 <ArrowRightLeft className="w-3 h-3 text-neutral-300" />
-              </div>
-              <div className="text-center space-y-1">
-                <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">🇮🇩 KLATEN</p>
-                <p className="text-2xl font-black text-neutral-800 tabular-nums">{indoTimeStr}</p>
-                <p className="text-[8px] font-bold text-neutral-400 uppercase">WIB (GMT+7)</p>
-              </div>
-              <div className="text-center space-y-1">
-                <p className="text-[9px] font-black text-primary uppercase tracking-widest">🇸🇦 MEKAH</p>
-                <p className="text-2xl font-black text-primary tabular-nums">{saudiTimeStr}</p>
-                <p className="text-[8px] font-bold text-primary-light uppercase">WAS (GMT+3)</p>
-              </div>
-            </div>
-            
-            <div className="bg-neutral-50/50 p-4 border-t border-neutral-100 flex items-center justify-center gap-3">
-               <Calendar className="w-3.5 h-3.5 text-neutral-400" />
-               <span className="text-[10px] font-black text-neutral-600 uppercase tracking-tight">{dateStr}</span>
-               <span className="w-1 h-1 rounded-full bg-neutral-300" />
-               <span className="text-[10px] font-black text-primary uppercase tracking-tight">{getHijriDate(currentTime)}</span>
-            </div>
+        <section className="bg-white rounded-[40px] border border-neutral-100 shadow-sm p-6 space-y-6">
+          <div className="flex items-center justify-center gap-3">
+             <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                <Clock className="w-5 h-5 text-emerald-600" />
+             </div>
+             <h2 className="text-lg font-black text-neutral-800 tracking-tight">Jam Dunia & Jadwal Salat</h2>
           </div>
 
-          <div className="bg-white overflow-hidden rounded-[32px] border border-neutral-100 shadow-sm">
-            <div className="bg-amber-600 p-5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-amber-500/30 flex items-center justify-center">
-                  <Banknote className="w-4 h-4 text-white" />
+          <div className="bg-emerald-50/50 border border-emerald-100 rounded-3xl p-4 text-center space-y-1">
+             <div className="flex items-center justify-center gap-2 text-[10px] font-black text-emerald-700 uppercase tracking-widest">
+                <MapPin className="w-3 h-3" />
+                <span>Grogol, Indonesia</span>
+             </div>
+             <div className="space-y-0.5">
+                <p className="text-sm font-black text-emerald-900 tracking-tight">{getHijriDate(currentTime)}</p>
+                <p className="text-[8px] font-bold text-emerald-600/60 uppercase tracking-[0.2em]">*Berdasarkan KHGT Muhammadiyah</p>
+             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* INDONESIA CARD */}
+            <div className="bg-emerald-50/30 border border-emerald-100 rounded-[32px] p-6 space-y-4">
+              <div className="text-center space-y-1">
+                <p className="text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em]">INDONESIA (WIB)</p>
+                <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                  <p className="text-xl sm:text-2xl font-black text-emerald-600 tabular-nums leading-none tracking-tight">
+                    {indoTimeStr.replace(/:/g, '.')} 
+                  </p>
+                  <span className="text-sm font-black text-emerald-600">WIB</span>
                 </div>
-                <div>
-                  <h3 className="text-[10px] font-black text-white uppercase tracking-wider">Jadwal Salat Harian</h3>
-                  <p className="text-[8px] text-amber-100 font-bold uppercase tracking-widest">{dateStr}</p>
-                </div>
+                <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">{dateStr}</p>
               </div>
-              <div className="flex gap-1">
-                <button className="px-2 py-1 bg-amber-700/50 rounded text-[8px] font-bold text-white uppercase">Mekah</button>
+
+              <div className="space-y-2">
+                {prayerTimesIndo.map((p, i) => (
+                  <div key={i} className="bg-white px-4 py-2.5 rounded-2xl border border-emerald-100/50 flex items-center justify-between shadow-sm">
+                    <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">{p.name}</p>
+                    <p className="text-xs font-black text-emerald-700 tabular-nums">{p.time}</p>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="p-4 grid grid-cols-5 gap-1.5 bg-amber-50/10">
-              {prayerTimesSaudi.map((p, i) => (
-                <div key={i} className="bg-white p-2.5 rounded-2xl border border-amber-100/50 text-center space-y-1 shadow-sm">
-                  <p className="text-[8px] font-black text-amber-800 uppercase">{p.name}</p>
-                  <p className="text-[11px] font-black text-neutral-800 tabular-nums">{p.time}</p>
+
+            {/* SAUDI CARD */}
+            <div className="bg-amber-50/30 border border-amber-100 rounded-[32px] p-6 space-y-4">
+              <div className="text-center space-y-1">
+                <p className="text-[10px] font-black text-amber-700 uppercase tracking-[0.2em]">ARAB SAUDI (WAS)</p>
+                <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                  <p className="text-xl sm:text-2xl font-black text-amber-600 tabular-nums leading-none tracking-tight">
+                    {saudiTimeStr.replace(/:/g, '.')} 
+                  </p>
+                  <span className="text-sm font-black text-amber-600">WAS</span>
                 </div>
-              ))}
-            </div>
-            <div className="px-4 py-2 bg-amber-50 border-t border-amber-100/30 text-center">
-               <p className="text-[8px] font-black text-amber-700 uppercase tracking-widest italic opacity-60">Waktu salat berdasarkan standar Umm Al-Qura</p>
+                <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">{dateStr}</p>
+              </div>
+
+              <div className="space-y-2">
+                {prayerTimesSaudi.map((p, i) => (
+                  <div key={i} className="bg-white px-4 py-2.5 rounded-2xl border border-amber-100/50 flex items-center justify-between shadow-sm">
+                    <p className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">{p.name}</p>
+                    <p className="text-xs font-black text-amber-700 tabular-nums">{p.time}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Al-Qur'an Digital */}
         <section className="space-y-4">
@@ -1510,7 +1586,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                            <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[10px] font-black text-primary shrink-0">
                              {a.nomorAyat}
                            </div>
-                           <p className="text-3xl font-arabic text-right leading-[1.8] text-neutral-800" dir="rtl">{a.teksArab}</p>
+                           <p className="text-xl sm:text-2xl md:text-3xl font-arabic text-right leading-[1.8] text-neutral-800 break-words w-full" dir="rtl">{a.teksArab}</p>
                         </div>
                         <div className="space-y-2 pl-12">
                           <p className="text-xs text-neutral-500 font-medium leading-relaxed italic">{a.teksLatin}</p>

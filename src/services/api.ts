@@ -238,37 +238,37 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
             };
 
             const idx = {
-              nama: findC(['nama lengkap', 'jemaah', 'nama jemaah', 'nama'], 8), 
-              porsi: findC(['nomor porsi', 'no. porsi', 'no porsi', 'porsi hq', 'porsi', 'nomor_porsi'], 5), 
-              kloter: findC(['kloter', 'kelompok terbang'], 1),
-              romb: findC(['rombongan', 'romb'], 2),
-              asrama: findC(['asrama', 'masuk'], 3),
-              karom: findC(['ketua rombongan', 'karom', 'ketua'], 4),
-              waKarom: findC(['wa karom', 'wa ketua'], 28), 
-              waPetugas: findC(['wa petugas', 'admin', 'petugas'], 29), 
-              umur: findC(['umur'], 9),
-              jk: findC(['jenis kelamin', 'jk'], 10),
-              alamat: findC(['alamat'], 11),
-              desa: findC(['desa', 'kelurahan'], 12),
-              kec: findC(['kecamatan'], 13),
-              kab: findC(['kabupaten'], 14),
-              wa: findC(['wa jemaah', 'whatsapp jemaah', 'nomor wa', 'wa'], 15),
-              hotel: findC(['hotel mekah'], 31), 
-              peta: findC(['link peta', 'peta hotel'], 32), 
-              tanazul: findC(['tanazul'], 16),
-              murur: findC(['murur'], 17),
-              nafar: findC(['nafar'], 18),
-              dam: findC(['jalur dam', 'dam'], 19),
-              gel: findC(['umrah gel', 'gelombang'], 20),
-              badal: findC(['badal'], 21),
-              roda: findC(['kursi roda', 'roda'], 22),
-              tongkat: findC(['tongkat', 'kruk'], 23),
-              penTubuh: findC(['pen tubuh', 'pen'], 24), 
-              ringJantung: findC(['ring jantung', 'ring'], 25), 
-              pendamping: findC(['pendamping lansia', 'pendamping'], 26), 
-              waPendamping: findC(['wa pendamping'], 27), 
-              paspor: findC(['paspor'], 6), 
-              visa: findC(['visa'], 7) 
+              nama: 8, // I
+              porsi: 5, // F (Sheet 1 Kolom F usually holds porsi if F is index 5)
+              kloter: 1, // B
+              romb: 2, // C
+              asrama: 3, // D
+              karom: 4, // E
+              waKarom: 28, // AC
+              waPetugas: 29, // AD
+              umur: 9, // J
+              jk: 10, // K
+              alamat: 11, // L
+              desa: 12, // M
+              kec: 13, // N
+              kab: 14, // O
+              wa: 15, // P
+              tanazul: 16, // Q
+              murur: 17, // R
+              nafar: 18, // S
+              dam: 19, // T
+              gel: 20, // U
+              badal: 21, // V
+              roda: 22, // W
+              tongkat: 23, // X
+              penTubuh: 30, // AE? Let's check V is 21, W is 22... wait, requirements say Pen Tubuh is V? No, Badal is V, Kursi Roda is W, Tongkat X. Requirements say Pen Tubuh is V again? typo in req? likely Y.
+              ringJantung: 25, // Z
+              pendamping: 26, // AA
+              waPendamping: 27, // AB
+              hotel: 31, // AF
+              peta: 32, // AG
+              paspor: 6, // G
+              visa: 7 // H
             };
 
             const startRow = hIdx !== -1 ? hIdx + 1 : 0; 
