@@ -457,29 +457,6 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
     }
   };
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50 p-6">
-      <div className="flex flex-col items-center gap-6">
-        <div className="w-24 h-24 animate-pulse flex items-center justify-center">
-          <img 
-            src="https://data.arafahklaten.com/logoarafah.png" 
-            alt="Logo" 
-            className="w-full h-full object-contain"
-            referrerPolicy="no-referrer"
-          />
-        </div>
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex items-center gap-2">
-             <div className="w-3 h-3 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
-             <div className="w-3 h-3 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
-             <div className="w-3 h-3 bg-primary rounded-full animate-bounce" />
-          </div>
-          <p className="text-sm font-black text-primary uppercase tracking-[0.2em] ml-2 mt-2">Memuat Sistem...</p>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col md:flex-row">
       {/* Mobile Navbar */}
@@ -641,6 +618,20 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
 
       {/* Main Content */}
       <main className="flex-1 min-w-0 p-4 md:p-10 space-y-8 pb-32 md:pb-20 overflow-x-hidden">
+        {loading && (
+          <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-[10px] font-bold text-emerald-800 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-4 h-4 text-primary animate-spin" />
+              <span className="uppercase tracking-widest leading-none">Sinkronisasi Basis Data Arafah...</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <div className="w-3 h-3 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <div className="w-3 h-3 bg-primary rounded-full animate-bounce" />
+            </div>
+          </div>
+        )}
+
         {activeTab === 'data' && (
           <section className="space-y-8">
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
