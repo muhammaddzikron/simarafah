@@ -159,12 +159,9 @@ async function ensureAuth() {
       const cred = await signInAnonymously(auth);
       console.log("Firebase: Anonymous authentication successful. UID:", cred.user.uid);
     } catch (e: any) {
-      // auth/admin-restricted-operation means Anonymous Auth is disabled in Firebase Console
-      if (e.code === 'auth/admin-restricted-operation') {
-        console.warn("Firebase Auth Error: 'Anonymous' provider is disabled in Firebase Console. Please enable it under Authentication > Sign-in method.");
-      } else {
-        console.error("Firebase Auth Error:", e.code, e.message);
-      }
+      console.error("Firebase Auth Error:", e.code, e.message);
+      // Throw error if auth is critical for the operation
+      throw new Error(`Koneksi Firebase Gagal (${e.code}). Pastikan 'Anonymous Auth' aktif dan domain sudah di-whitelist.`);
     }
   }
 }
@@ -673,21 +670,19 @@ export async function saveAdminContent(content: AdminContent) {
     return;
   }
   try {
+    // 1. Ensure Auth (Throws if fails)
     await ensureAuth();
     
-    // Clean data for Firestore (remove undefineds)
+    // 2. Clean data for Firestore (remove undefineds)
     const sanitized = sanitizePayload(content);
     
     console.log("Firebase Save: Attempting to write to settings/admin_content (Primary Path)...");
     const targetDoc = doc(db, 'settings', 'admin_content');
     
+    // 3. Perform Write
     await setDoc(targetDoc, {
       ...sanitized,
       updatedAt: serverTimestamp()
-    }).catch(e => {
-      if (e?.code === 'resource-exhausted') isQuotaExceeded = true;
-      console.error("Firestore setDoc failed:", e);
-      handleFirestoreError(e, 'write', 'settings/admin_content');
     });
     
     console.log("Firebase Save: Success. Updating local cache.");
@@ -699,10 +694,21 @@ export async function saveAdminContent(content: AdminContent) {
     saveStorage(KEY_CONTENT, content);
     cachedAdminContent = content;
     lastContentFetchTime = Date.now();
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error saving admin content to Firebase:", e);
+    // Persist locally as fallback
     saveStorage(KEY_CONTENT, content);
-    throw e; // Relaunch to let UI show error
+    
+    if (e?.code === 'resource-exhausted') {
+      isQuotaExceeded = true;
+      throw new Error("Kuota harian cloud habis. Perubahan disimpan di aplikasi ini hari ini.");
+    }
+    
+    if (e?.code === 'permission-denied') {
+      throw new Error("Akses Cloud ditolak. Pastikan Firebase Security Rules sudah di-deploy.");
+    }
+
+    throw e; // Relaunch specialized error or generic
   }
 }
 

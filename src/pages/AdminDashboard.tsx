@@ -64,23 +64,25 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
 
   const processFirestoreError = (err: any, fallbackMsg: string) => {
     console.error(fallbackMsg, err);
-    let msg = fallbackMsg;
+    let msg = err?.message || fallbackMsg;
 
     if (err?.code === 'resource-exhausted') {
       msg = 'Kuota Cloud JEMAAH penuh (Limit Free). Mohon coba lagi besok saat kuota direset.';
-    } else if (err?.message && err.message.startsWith('{')) {
+    } else if (msg.startsWith('{')) {
       try {
-        const info = JSON.parse(err.message);
+        const info = JSON.parse(msg);
         if (info.error && info.error.includes('Quota')) {
           msg = '⚠️ KUOTA DATABASE HARIAN TELAH HABIS. Database akan aktif kembali besok pagi.';
         } else {
-          msg = `Error: ${info.error}`;
+          msg = `Cloud Error: ${info.error || 'Terjadi kesalahan hak akses'}`;
         }
       } catch {
-        msg = err.message;
+        // Keep as msg
       }
-    } else if (err?.message && err.message.includes('permission-denied')) {
-      msg = 'Akses ditolak. Silakan login ulang atau hubungi admin.';
+    } else if (msg.includes('permission-denied')) {
+      msg = 'Akses ditolak. Silakan login ulang atau hubungi admin (Cek Firebase Rules).';
+    } else if (msg.includes('auth/unauthorized-domain')) {
+      msg = 'Domain ini belum diizinkan di Firebase Console > Authentication.';
     }
 
     showToast(msg, 'error');
