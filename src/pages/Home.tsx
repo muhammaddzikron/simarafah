@@ -75,6 +75,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
   const [materiTab, setMateriTab] = useState<'all' | 'doa' | 'teks' | 'video' | 'download'>('all');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
+  const [dbStatus, setDbStatus] = useState<'loading' | 'ok' | 'error'>('loading');
 
   useEffect(() => {
     const q = searchParams.get('q');
@@ -83,12 +84,18 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
 
   useEffect(() => {
     async function load() {
-      const [data, dataJ] = await Promise.all([
-        getAdminContent(),
-        fetchJemaah()
-      ]);
-      setContent(data);
-      setJemaah(dataJ);
+      try {
+        const [data, dataJ] = await Promise.all([
+          getAdminContent(),
+          fetchJemaah()
+        ]);
+        setContent(data);
+        setJemaah(dataJ);
+        setDbStatus('ok');
+      } catch (err) {
+        console.error("Initial data load failed:", err);
+        setDbStatus('error');
+      }
     }
     load();
   }, []);
@@ -1010,25 +1017,41 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
 
   return (
     <div className="px-5 py-6 space-y-8 pb-24">
+      {/* Welcome Header - Visible to All */}
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest leading-none">Ahlan wa Sahlan,</p>
+          <h1 className="text-lg font-black text-neutral-800 tracking-tight">{user?.nama || 'Tamu Jemaah'}</h1>
+        </div>
+        {user ? (
+          onLogout && (
+            <button 
+              onClick={onLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all active:scale-95"
+            >
+              <LogOut className="w-3.5 h-3.5" /> Log Out
+            </button>
+          )
+        ) : (
+          <button 
+            onClick={() => navigate('/login')}
+            className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full border border-primary/20 text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all active:scale-95"
+          >
+            Masuk <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
+      {dbStatus === 'error' && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-[10px] font-bold text-amber-800 flex items-center gap-3">
+          <RefreshCw className="w-4 h-4 text-amber-500 animate-spin" />
+          <span>Gagal sinkronisasi database. Menampilkan data cadangan. Cek Authorized Domain di Firebase.</span>
+        </div>
+      )}
+
       {/* Dashboard Overhaul for Jemaah */}
       {user?.role === 'jemaah' && (
         <>
-          {/* Logout & Welcome Header */}
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest leading-none">Ahlan wa Sahlan,</p>
-              <h1 className="text-lg font-black text-neutral-800 tracking-tight">{user.nama}</h1>
-            </div>
-            {onLogout && (
-              <button 
-                onClick={onLogout}
-                className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-full border border-rose-100 text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all active:scale-95"
-              >
-                <LogOut className="w-3.5 h-3.5" /> Log Out
-              </button>
-            )}
-          </div>
-
           {currentUserData && (
             <>
               {/* Kartu Informasi Personal Jemaah */}

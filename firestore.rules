@@ -49,7 +49,7 @@ service cloud.firestore {
     // settings collection
     match /settings/{docId} {
       // allow public get for admin_content (public info)
-      allow get: if (docId == 'admin_content' || isSignedIn()) && isValidId(docId);
+      allow get: if docId == 'admin_content' || isSignedIn();
       allow list: if false; // No listing settings
       
       allow write: if isSignedIn() && (

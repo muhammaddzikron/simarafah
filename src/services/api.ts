@@ -121,10 +121,24 @@ export const defaultAdminUsers = [
   { username: 'parno', password: 'parnoo', nama: 'Suparno', role: 'admin_petugas' },
 ];
 
+// Helper to ensure auth is ready
+async function ensureAuth() {
+  if (!auth.currentUser) {
+    try {
+      await signInAnonymously(auth);
+      console.log("Anonymous auth initialized for Firestore access.");
+    } catch (e) {
+      console.error("Anonymous auth failed initially:", e);
+    }
+  }
+}
+
 export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]> {
   try {
-    // 1. Try Spreadsheet first (Master Data) with cache buster
-    const response = await fetch(`${SPREADSHEET_URL}&t=${Date.now()}`, { cache: 'no-store' }).catch(e => {
+    await ensureAuth();
+
+    // 1. Try Spreadsheet first (Master Data)
+    const response = await fetch(`${SPREADSHEET_URL}&t=${Date.now()}`).catch(e => {
         console.warn("Spreadsheet fetch network error:", e);
         return null;
     });
@@ -298,6 +312,7 @@ export async function saveJemaah(jemaah: Jemaah[]) {
 
 export async function getAdminContent(): Promise<AdminContent> {
   try {
+    await ensureAuth();
     // 1. Try Firestore first
     const docRef = doc(db, 'settings', 'admin_content');
     const docSnap = await getDoc(docRef).catch(e => {
