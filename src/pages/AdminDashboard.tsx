@@ -9,7 +9,7 @@ import {
   Database, Share2, Youtube, Instagram, MapPin,
   Smartphone, FileText, Video, Heart, Stethoscope,
   Wind, Map, Shield, MoreVertical, Key, Banknote,
-  LogOut, Menu, Calendar, RefreshCw, BookOpen
+  LogOut, Menu, Calendar, RefreshCw, BookOpen, AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Jemaah, AdminContent, Registration } from '../types';
@@ -17,7 +17,7 @@ import {
   fetchJemaah, getAdminContent, saveAdminContent, 
   getAdminUsers, saveAdminUsers, getRegistrations,
   deleteRegistration, updateRegistrationStatus, updateRegistration,
-  defaultAdminContent
+  defaultAdminContent, forceResetLocalData
 } from '../services/api';
 import { cn } from '../lib/utils';
 import * as XLSX from 'xlsx';
@@ -543,6 +543,16 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                   className="w-full py-2 bg-white border border-red-100 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-red-50 transition-all flex items-center justify-center gap-2"
                 >
                   <LogOut className="w-3.5 h-3.5" /> Keluar Sistem
+                </button>
+                <button 
+                  onClick={() => {
+                    if(confirm('Reset seluruh cache data lokal dan muat ulang aplikasi? Tindakan ini akan memaksa data default terbaru muncul jika tidak ada data di Cloud.')) {
+                      forceResetLocalData();
+                    }
+                  }}
+                  className="w-full py-2 bg-neutral-100 text-neutral-400 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-neutral-200 transition-all flex items-center justify-center gap-2"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5" /> Reset Cache
                 </button>
               </div>
             </div>

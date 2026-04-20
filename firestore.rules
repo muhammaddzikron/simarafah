@@ -32,8 +32,8 @@ service cloud.firestore {
     }
     
     function isValidAdminContent(data) {
-      return (data.profil is string && data.profil.size() <= 5000) ||
-             (data.updatedAt is timestamp);
+      return data.updatedAt == request.time &&
+             (data.profil is string && data.profil.size() <= 10000);
     }
     
     function isValidRegistration(data) {

@@ -15,6 +15,12 @@ let lastContentFetchTime = 0;
 let successfulContentPath: any = null; // Remember which path worked to avoid probing 8 paths every time
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
 
+// Storage keys with versioning to force refresh on logic change
+const STORAGE_VER = 'v4';
+const KEY_JEMAAH = `jemaah_data_${STORAGE_VER}`;
+const KEY_CONTENT = `admin_content_${STORAGE_VER}`;
+const KEY_USERS = `admin_users_${STORAGE_VER}`;
+
 // Helper to get from local storage
 const getStorage = <T>(key: string, initial: T): T => {
   const saved = localStorage.getItem(key);
@@ -147,16 +153,25 @@ export const defaultAdminUsers = [
 async function ensureAuth() {
   if (!auth.currentUser) {
     try {
+      console.log("Firebase: Attempting anonymous authentication...");
       await signInAnonymously(auth);
+      console.log("Firebase: Anonymous authentication successful.");
     } catch (e: any) {
-      //auth/admin-restricted-operation means Anonymous Auth is disabled in Firebase Console
+      // auth/admin-restricted-operation means Anonymous Auth is disabled in Firebase Console
       if (e.code === 'auth/admin-restricted-operation') {
-        console.warn("Firebase Anonymous Auth is disabled. Some features may be restricted. Please enable 'Anonymous' provider in Firebase Console > Authentication > Sign-in method.");
+        console.warn("Firebase Auth Error: 'Anonymous' provider is disabled in Firebase Console. Please enable it under Authentication > Sign-in method.");
       } else {
-        console.error("Firebase Auth initialization error:", e);
+        console.error("Firebase Auth Error:", e.code, e.message);
       }
     }
   }
+}
+
+export function forceResetLocalData() {
+  localStorage.removeItem(KEY_JEMAAH);
+  localStorage.removeItem(KEY_CONTENT);
+  localStorage.removeItem(KEY_USERS);
+  window.location.reload();
 }
 
 export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]> {
@@ -308,7 +323,7 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
       if (shouldSync && jemaahList.length > 0) {
         saveJemaah(jemaahList).catch(console.error);
       } else {
-        saveStorage('jemaah_data', jemaahList);
+        saveStorage(KEY_JEMAAH, jemaahList);
       }
       
       cachedJemaah = jemaahList;
@@ -376,10 +391,10 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
       }
     }
 
-    return getStorage('jemaah_data', defaultJemaah);
+    return getStorage(KEY_JEMAAH, defaultJemaah);
   } catch (error) {
     console.error('fetchJemaah overall failure:', error);
-    return getStorage('jemaah_data', defaultJemaah);
+    return getStorage(KEY_JEMAAH, defaultJemaah);
   }
 }
 
@@ -390,10 +405,10 @@ export async function saveJemaah(jemaah: Jemaah[]) {
       jemaah,
       updatedAt: serverTimestamp()
     }).catch(e => handleFirestoreError(e, 'write', 'settings/jemaah_data'));
-    saveStorage('jemaah_data', jemaah);
+    saveStorage(KEY_JEMAAH, jemaah);
   } catch (e) {
     console.error("Error saving jemaah to Firebase:", e);
-    saveStorage('jemaah_data', jemaah);
+    saveStorage(KEY_JEMAAH, jemaah);
   }
 }
 
@@ -502,6 +517,7 @@ export async function getAdminContent(): Promise<AdminContent> {
       };
       cachedAdminContent = finalContent;
       lastContentFetchTime = now;
+      saveStorage(KEY_CONTENT, finalContent);
       return finalContent;
     }
 
@@ -522,7 +538,7 @@ export async function getAdminContent(): Promise<AdminContent> {
           complete: (results) => {
             const rows = results.data as any[];
             if (rows.length === 0) {
-              resolve(getStorage('admin_content', defaultAdminContent));
+              resolve(getStorage(KEY_CONTENT, defaultAdminContent));
               return;
             }
             // ... (keep mapping logic)
@@ -601,16 +617,20 @@ export async function getAdminContent(): Promise<AdminContent> {
             if (!content.profil) content.profil = defaultAdminContent.profil;
             if (content.galeri.length === 0) content.galeri = defaultAdminContent.galeri;
             if (content.agenda.length === 0) content.agenda = defaultAdminContent.agenda;
+            
+            cachedAdminContent = content;
+            lastContentFetchTime = now;
+            saveStorage(KEY_CONTENT, content);
             resolve(content);
           },
-          error: () => resolve(getStorage('admin_content', defaultAdminContent))
+          error: () => resolve(getStorage(KEY_CONTENT, defaultAdminContent))
         });
       });
     }
-    return getStorage('admin_content', defaultAdminContent);
+    return getStorage(KEY_CONTENT, defaultAdminContent);
   } catch (error) {
     console.error('getAdminContent overall failure:', error);
-    return getStorage('admin_content', defaultAdminContent);
+    return getStorage(KEY_CONTENT, defaultAdminContent);
   }
 }
 
@@ -620,7 +640,6 @@ export async function saveAdminContent(content: AdminContent) {
     // Sanitize to remove undefined for Firebase
     const sanitized = JSON.parse(JSON.stringify({
       ...content,
-      updatedAt: new Date().toISOString() // Use ISO string as a simple fallback or let serverTimestamp work
     }));
     
     await setDoc(doc(db, 'settings', 'admin_content'), {
@@ -628,12 +647,12 @@ export async function saveAdminContent(content: AdminContent) {
       updatedAt: serverTimestamp()
     }).catch(e => handleFirestoreError(e, 'write', 'settings/admin_content'));
     
-    saveStorage('admin_content', content);
+    saveStorage(KEY_CONTENT, content);
     cachedAdminContent = content; // Update local cache
     lastContentFetchTime = Date.now();
   } catch (e) {
     console.error("Error saving admin content to Firebase:", e);
-    saveStorage('admin_content', content);
+    saveStorage(KEY_CONTENT, content);
     throw e; // Relaunch to let UI show error
   }
 }
@@ -649,7 +668,7 @@ export async function getAdminUsers(): Promise<User[]> {
   } catch (e) {
     console.error("Error loading admin users from Firebase:", e);
   }
-  return getStorage('admin_users', defaultAdminUsers.map(u => ({ ...u, id: `admin-${u.username}`, role: u.role as UserRole })));
+  return getStorage(KEY_USERS, defaultAdminUsers.map(u => ({ ...u, id: `admin-${u.username}`, role: u.role as UserRole })));
 }
 
 export async function saveAdminUsers(users: User[]) {
@@ -659,10 +678,10 @@ export async function saveAdminUsers(users: User[]) {
       users,
       updatedAt: serverTimestamp()
     }).catch(e => handleFirestoreError(e, 'write', 'settings/admin_users'));
-    saveStorage('admin_users', users);
+    saveStorage(KEY_USERS, users);
   } catch (e) {
     console.error("Error saving admin users to Firebase:", e);
-    saveStorage('admin_users', users);
+    saveStorage(KEY_USERS, users);
   }
 }
 
