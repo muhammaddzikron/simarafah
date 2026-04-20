@@ -1949,69 +1949,6 @@ export default function AdminDashboard({ user, onLogout }: { user: User; onLogou
                     </div>
                   </div>
 
-                  {/* Kontak Petugas */}
-                  <div className="bg-white p-8 rounded-3xl border border-neutral-100 shadow-sm space-y-6">
-                    <div className="flex items-center justify-between">
-                      <SectionHeader icon={<ShieldCheck />} title="Daftar Kontak Petugas Lapangan" />
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => setContent({...content, kontakPetugas: [...content.kontakPetugas, { nama: '', jabatan: '', wa: '' }]})}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-100 transition-all active:scale-95"
-                      >
-                        <Plus className="w-3.5 h-3.5" /> Tambah Petugas
-                      </button>
-                      <button 
-                        onClick={handleSaveContent}
-                        disabled={isSavingContent}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-blue-600 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm transition-all active:scale-95 disabled:opacity-50"
-                      >
-                        <Save className="w-3.5 h-3.5" /> Simpan Cloud
-                      </button>
-                    </div>
-                    </div>
-                    <div className="space-y-3">
-                      {content.kontakPetugas.map((k, i) => (
-                        <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-neutral-50 rounded-2xl border border-neutral-100">
-                          <div>
-                            <label className="text-[9px] font-black text-neutral-400 uppercase tracking-widest ml-1 mb-1 block">Nama Petugas</label>
-                            <input type="text" value={k.nama} onChange={(e) => {
-                              const newK = [...content.kontakPetugas];
-                              newK[i].nama = e.target.value;
-                              setContent({...content, kontakPetugas: newK});
-                            }} placeholder="Contoh: H. Ahmad" className="w-full p-2 bg-white border border-neutral-200 rounded-xl text-[11px] font-bold outline-none" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-black text-neutral-400 uppercase tracking-widest ml-1 mb-1 block">Jabatan/Tugas</label>
-                            <input type="text" value={k.jabatan} onChange={(e) => {
-                              const newK = [...content.kontakPetugas];
-                              newK[i].jabatan = e.target.value;
-                              setContent({...content, kontakPetugas: newK});
-                            }} placeholder="Contoh: Ketua Kloter" className="w-full p-2 bg-white border border-neutral-200 rounded-xl text-[11px] font-bold outline-none" />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-black text-neutral-400 uppercase tracking-widest ml-1 mb-1 block">Nomor WhatsApp</label>
-                            <input type="text" value={k.wa} onChange={(e) => {
-                              const newK = [...content.kontakPetugas];
-                              newK[i].wa = e.target.value;
-                              setContent({...content, kontakPetugas: newK});
-                            }} placeholder="Contoh: 08123456789" className="w-full p-2 bg-white border border-neutral-200 rounded-xl text-[11px] font-bold outline-none" />
-                          </div>
-                          <div className="flex items-end pb-1">
-                            <button 
-                              onClick={() => {
-                                const newK = content.kontakPetugas.filter((_, idx) => idx !== i);
-                                setContent({...content, kontakPetugas: newK});
-                              }}
-                              className="w-full py-2 text-red-500 hover:bg-red-50 rounded-xl border border-red-100 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all"
-                            >
-                              <Trash2 className="w-3 h-3" /> Hapus
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                   {/* Pembayaran */}
                   <div className="bg-white p-8 rounded-3xl border border-neutral-100 shadow-sm space-y-6 flex-1">
                     <div className="flex items-center justify-between">

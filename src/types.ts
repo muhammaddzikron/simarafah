@@ -70,7 +70,6 @@ export interface AdminContent {
     tambahan: string;
   };
   pembayaran: PaymentData[];
-  kontakPetugas: { nama: string; jabatan: string; wa: string }[];
 }
 
 export type UserRole = 'jemaah' | 'admin_petugas' | 'super_admin';

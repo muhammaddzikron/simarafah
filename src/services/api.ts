@@ -214,9 +214,6 @@ Sajadah Arafah beri identitas Nama untuk menghindari tertukar dengan jamaah lain
   pembayaran: [
     { jenis: 'Pendaftaran Arafah', total: 3000000, dibayar: 200000 },
     { jenis: 'DAM, Tarwiyah, Ziarah, Dll', total: 5875000, dibayar: 5875000 }
-  ],
-  kontakPetugas: [
-    { nama: 'H. Ahmad', jabatan: 'Ketua Rombongan', wa: '08123456789' }
   ]
 };
 
@@ -615,7 +612,6 @@ export async function getAdminContent(forceSync = false): Promise<AdminContent> 
         materi: recoveredData.materi || defaultAdminContent.materi,
         galeri: recoveredData.galeri || defaultAdminContent.galeri,
         pembayaran: recoveredData.pembayaran || defaultAdminContent.pembayaran,
-        kontakPetugas: recoveredData.kontakPetugas || defaultAdminContent.kontakPetugas,
         perlengkapan: recoveredData.perlengkapan || defaultAdminContent.perlengkapan
       };
       cachedAdminContent = finalContent;
@@ -649,7 +645,7 @@ export async function getAdminContent(forceSync = false): Promise<AdminContent> 
               profil: '', galeri: [], agenda: [], materi: [],
               sosmed: { ig: '', tiktok: '', yt: '' },
               kontak: { wa1: '', wa2: '', alamat: '', peta: '' },
-              pengumuman: '', perlengkapan: [], pembayaran: [], kontakPetugas: []
+              pengumuman: '', perlengkapan: [], pembayaran: []
             };
 
             rows.forEach(row => {
