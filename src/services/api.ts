@@ -7,6 +7,14 @@ import { signInAnonymously } from 'firebase/auth';
 const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/14W48hU9eYzxZ5EkjGGSTs1WCTzITV02QooOoo7lYix0/export?format=csv&gid=9046765';
 const SPREADSHEET_CONTENT_URL = 'https://docs.google.com/spreadsheets/d/14W48hU9eYzxZ5EkjGGSTs1WCTzITV02QooOoo7lYix0/export?format=csv&gid=1724714709';
 
+// In-memory cache for jemaah data to speed up repeated access and login
+let cachedJemaah: Jemaah[] | null = null;
+let cachedAdminContent: AdminContent | null = null;
+let lastFetchTime = 0;
+let lastContentFetchTime = 0;
+let successfulContentPath: any = null; // Remember which path worked to avoid probing 8 paths every time
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+
 // Helper to get from local storage
 const getStorage = <T>(key: string, initial: T): T => {
   const saved = localStorage.getItem(key);
@@ -144,11 +152,17 @@ async function ensureAuth() {
 }
 
 export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]> {
+  const now = Date.now();
+  if (!shouldSync && cachedJemaah && (now - lastFetchTime < CACHE_TTL)) {
+    return cachedJemaah;
+  }
+
   try {
     await ensureAuth();
 
     // 1. Try Spreadsheet first (Master Data)
-    const response = await fetch(`${SPREADSHEET_URL}&t=${Date.now()}`).catch(e => {
+    const url = shouldSync ? `${SPREADSHEET_URL}&t=${now}` : SPREADSHEET_URL;
+    const response = await fetch(url).catch(e => {
         console.warn("Spreadsheet fetch network error:", e);
         return null;
     });
@@ -288,6 +302,9 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
       } else {
         saveStorage('jemaah_data', jemaahList);
       }
+      
+      cachedJemaah = jemaahList;
+      lastFetchTime = now;
       return jemaahList;
     }
 
@@ -373,10 +390,16 @@ export async function saveJemaah(jemaah: Jemaah[]) {
 }
 
 export async function getAdminContent(): Promise<AdminContent> {
+  const now = Date.now();
+  if (cachedAdminContent && (now - lastContentFetchTime < CACHE_TTL)) {
+    return cachedAdminContent;
+  }
+
   try {
     await ensureAuth();
     
-    const possiblePaths = [
+    // Most likely paths first, plus the one that worked last time
+    const possiblePaths = successfulContentPath ? [successfulContentPath] : [
       { db: db, path: ['settings', 'admin_content'], label: 'DB-Config: settings/admin_content' },
       { db: db, path: ['settings', 'admin-content'], label: 'DB-Config: settings/admin-content' },
       { db: db, path: ['settings', 'entities'], label: 'DB-Config: settings/entities' },
@@ -417,10 +440,12 @@ export async function getAdminContent(): Promise<AdminContent> {
           if (data.materi && data.materi.length > 0) {
             console.log(`✅ Success! Recovered data from document ${p.label}. Materials: ${data.materi.length}`);
             recoveredData = data;
+            successfulContentPath = p; // Cache the successful path
             break;
           }
           console.log(`ℹ️ Found document at ${p.label}, but it has no materials.`);
           recoveredData = recoveredData || data; // Keep it if we haven't found better
+          successfulContentPath = p;
         }
       } catch (e) {
         console.warn(`Probing ${p.label} failed:`, e);
@@ -455,7 +480,7 @@ export async function getAdminContent(): Promise<AdminContent> {
     if (recoveredData) {
       console.log("--- End of Deep Search: Success ---");
       // Result must be merged with defaults to prevent crashes (e.g. missing sosmed)
-      return {
+      const finalContent = {
         ...defaultAdminContent,
         ...recoveredData,
         sosmed: { ...defaultAdminContent.sosmed, ...(recoveredData.sosmed || {}) },
@@ -467,6 +492,9 @@ export async function getAdminContent(): Promise<AdminContent> {
         kontakPetugas: recoveredData.kontakPetugas || defaultAdminContent.kontakPetugas,
         perlengkapan: recoveredData.perlengkapan || defaultAdminContent.perlengkapan
       };
+      cachedAdminContent = finalContent;
+      lastContentFetchTime = now;
+      return finalContent;
     }
 
     console.log("--- End of Deep Search: No Firestore data found. Using fallback source. ---");
@@ -678,26 +706,30 @@ export async function login(username: string, passwordOrPorsi: string): Promise<
   const uName = cleanInput(username);
   const pwOrPorsi = cleanInput(passwordOrPorsi);
 
-  // Ensure Firebase Auth session exists before any Firestore calls
-  await ensureAuth();
-
-  // Priority check for the newly requested admin password
+  // Parallelize Auth and Data Fetching
+  const authPromise = ensureAuth();
+  
+  // Fast Path for hardcoded admin
   if (uName === 'admin' && pwOrPorsi === 'adnimku') {
+    await authPromise;
     return { id: 'admin-admin', username: 'admin', nama: 'Super Admin', role: 'super_admin' };
   }
 
-  const admins = await getAdminUsers();
+  // Fetch roles and jemaah in parallel to save time
+  const [admins, jemaahList] = await Promise.all([
+    getAdminUsers(),
+    fetchJemaah()
+  ]);
+
   const admin = admins.find(u => u.username === uName && (u.password === pwOrPorsi || u.porsi === pwOrPorsi));
   
   if (admin) {
     return admin;
   }
-
-  const jemaahList = await fetchJemaah();
   
   // LOGGING (Internal)
   if (!jemaahList || jemaahList.length === 0) {
-    console.error("No jemaah loaded from spreadsheet.");
+    console.error("No jemaah loaded.");
   }
 
   // Helper for flexible matching (removes non-digits)
