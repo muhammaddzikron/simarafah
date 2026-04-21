@@ -143,7 +143,23 @@ Saat ini, KBIHU Arafah Muhammadiyah Klaten dipimpin oleh Dr. dr. H. Husen Prabow
     { id: 'v5', judul: 'Materi Manasik Video 5', link: 'https://www.youtube.com/watch?v=eL9GwCFPRCU', tipe: 'video' },
     { id: 'v6', judul: 'Materi Manasik Video 6', link: 'https://www.youtube.com/watch?v=V79Lmfw_Q8c', tipe: 'video' },
     { id: 'v7', judul: 'Materi Manasik Video 7', link: 'https://www.youtube.com/watch?v=bGKLYDijNFg', tipe: 'video' },
-    { id: '3', judul: 'Materi Manasik (Google Drive)', link: 'https://drive.google.com/drive/folders/1EOrDF6Dq9ItaJCl20BvTVtmCxugMycgV', tipe: 'download' }
+    { id: '3', judul: 'Materi Manasik (Google Drive)', link: 'https://drive.google.com/drive/folders/1EOrDF6Dq9ItaJCl20BvTVtmCxugMycgV', tipe: 'download' },
+    { 
+      id: 't1', 
+      judul: '1. Proses Perjalanan Ibadah Haji - Dirumah', 
+      tipe: 'teks', 
+      isi: { 
+        konten: 'a. Niat Ikhlas (karena Allah semata), untuk melaksanakan Ibadah Haji dengan sebaik-baiknya.\nb. Berlatih sabar dalam segala urusan/tindakan.\nc. Mulai memperbaiki/menertibkan ibadah harian, khususnya Shalat, dan memperbaiki perilaku sehari-hari.\nd. Memperdalam pengetahuan tentang manasik haji dengan sungguh- sungguh, sehingga pelaksanaan hajinya benar (mabrur).\ne. Klarifikasi/berwasiat, tentang berbagai hal, khususnya soal utang piutang.\nf. Memperbaiki sillaturrokhiim/hubungan sesama manusia (tolong- menolong).\ng. Menjaga kondisi kesehatan, dengan melaksanakan olahraga yang sesuai.' 
+      } 
+    },
+    { 
+      id: 't2', 
+      judul: '2. Proses Perjalanan Ibadah Haji - Berangkat', 
+      tipe: 'teks', 
+      isi: { 
+        konten: 'Menjelang Berangkat\nMempersiapkan dan mencatat berbagai bekal yang dibawa/ secukupnya.\nDua hari sebelum keberangkatan, koper besar dikirim ke Kemenag. cantumkan identitas rombongan pada tiap koper.\nSurat-surat penting dan obat-obatan khusus dimasukkan ke tas paspor, untuk mempermudah setiap diperlukan\nPasrah, berpamitan, mohon maaf dan doa restu kepada orang tua. Sesepuh, sanak saudara dan handaitaulan, serta kerabat.\nBuku-buku yang diperlukan (Doa Dzikir. dll)\n\nBerangkat\nDengan berdoa dan bertawakal kepada Allah didahului Shalat Sunnat Safar. (doa keluar rumah)\nBerkumpul di tempat yang sudah ditentukan (GOR/ Gedung GBK). Jangan sampai terlambat, paling tidak 1 jam sebelum berangkat, sudah berada di tempat yang ditentukan.\nSambil menanti waktu keberangkatan ke Embarkasi Donohudan, bersalam-salaman dengan para penghantar.\nPelepasan dari Bupati Klaten, kemudian berangkat (dengan berdo\'a). menuju Donohudan.' 
+      } 
+    }
   ],
   sosmed: {
     ig: 'arafahklaten',
