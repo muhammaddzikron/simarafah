@@ -646,17 +646,42 @@ export async function getAdminContent(forceSync = false): Promise<AdminContent> 
 
     if (recoveredData) {
       console.log("--- End of Deep Search: Success ---");
-      // Result must be merged with defaults to prevent crashes (e.g. missing sosmed)
+      
+      // Smart Merge Materi: Cloud data takes priority, but defaults must fill the gaps
+      const cloudMateri = recoveredData.materi || [];
+      const cloudIds = new Set(cloudMateri.map((m: any) => m.id));
+      const mergedMateri = [...cloudMateri];
+      
+      // Add any defaults that are missing in cloud (ensures 26 items stay)
+      defaultAdminContent.materi.forEach(defItem => {
+        if (!cloudIds.has(defItem.id)) {
+          mergedMateri.push(defItem);
+        }
+      });
+
+      // Sort merged materi: Doas first (d1, d2...), then Articles (t1, t2...), then others
+      const sortedMateri = mergedMateri.sort((a, b) => {
+        const getPriority = (id: string) => {
+          if (id.startsWith('d')) return 1;
+          if (id.startsWith('t')) return 2;
+          return 3;
+        };
+        const pA = getPriority(a.id);
+        const pB = getPriority(b.id);
+        if (pA !== pB) return pA - pB;
+        return a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' });
+      });
+
       const finalContent = {
         ...defaultAdminContent,
         ...recoveredData,
         sosmed: { ...defaultAdminContent.sosmed, ...(recoveredData.sosmed || {}) },
         kontak: { ...defaultAdminContent.kontak, ...(recoveredData.kontak || {}) },
-        agenda: recoveredData.agenda || defaultAdminContent.agenda,
-        materi: recoveredData.materi || defaultAdminContent.materi,
-        galeri: recoveredData.galeri || defaultAdminContent.galeri,
-        pembayaran: recoveredData.pembayaran || defaultAdminContent.pembayaran,
-        perlengkapan: recoveredData.perlengkapan || defaultAdminContent.perlengkapan
+        agenda: (recoveredData.agenda && recoveredData.agenda.length > 0) ? recoveredData.agenda : defaultAdminContent.agenda,
+        materi: sortedMateri,
+        galeri: (recoveredData.galeri && recoveredData.galeri.length > 0) ? recoveredData.galeri : defaultAdminContent.galeri,
+        pembayaran: (recoveredData.pembayaran && recoveredData.pembayaran.length > 0) ? recoveredData.pembayaran : defaultAdminContent.pembayaran,
+        perlengkapan: (recoveredData.perlengkapan && recoveredData.perlengkapan.length > 0) ? recoveredData.perlengkapan : defaultAdminContent.perlengkapan
       };
       cachedAdminContent = finalContent;
       lastContentFetchTime = now;
