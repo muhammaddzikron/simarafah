@@ -32,6 +32,8 @@ export interface Jemaah {
   nomorPorsi?: string;
   keteranganKhusus?: string; // Health info
   waPetugas?: string;
+  bayarArafah?: string;
+  bayarLainnya?: string;
   paspor?: string;
   visa?: string;
 }

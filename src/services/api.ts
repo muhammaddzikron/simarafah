@@ -376,7 +376,9 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
               asrama: 3, // D
               karom: 4, // E
               waKarom: 28, // AC
-              waPetugas: 29, // AD
+              bayarArafah: 29, // AD
+              bayarLainnya: 30, // AE
+              waPetugas: 29, // Keeping for legacy if needed, but it's redundant now
               umur: 9, // J
               jk: 10, // K
               alamat: 11, // L
@@ -422,6 +424,8 @@ export async function fetchJemaah(shouldSync: boolean = false): Promise<Jemaah[]
                   jadwalMasukAsrama: g(idx.asrama),
                   namaKetuaRombongan: g(idx.karom),
                   waKarom: g(idx.waKarom),
+                  bayarArafah: g(idx.bayarArafah),
+                  bayarLainnya: g(idx.bayarLainnya),
                   waPetugas: g(idx.waPetugas),
                   umur: g(idx.umur),
                   jenisKelamin: g(idx.jk).toUpperCase().startsWith('L') ? 'L' : 'P',

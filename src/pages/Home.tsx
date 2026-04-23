@@ -375,7 +375,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
   // Currency Logic
   const SAR_RATE = 0.000219;
   const USD_RATE = 0.000058;
-  const numValue = parseFloat(idrAmount) || 0;
+  const numValue = parseFloat(idrAmount.replace(/[^\d-]/g, "")) || 0;
   
   const resultSAR = isRupiahBase ? numValue * SAR_RATE : numValue / SAR_RATE;
   const resultUSD = isRupiahBase ? numValue * USD_RATE : numValue / USD_RATE;
@@ -430,6 +430,30 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
     const checkedCount = dynamicChecklistItems.filter(item => userChecklist[item]).length;
     return Math.round((checkedCount / dynamicChecklistItems.length) * 100);
   }, [dynamicChecklistItems, userChecklist]);
+
+  const userPayments = useMemo(() => {
+    if (!content?.pembayaran) return [];
+    if (!currentUserData) return content.pembayaran;
+
+    return content.pembayaran.map(p => {
+      let dibayar = p.dibayar;
+      const cleanNum = (v: any) => {
+        if (typeof v === 'number') return v;
+        if (!v) return 0;
+        const s = String(v).trim();
+        // Remove all non-numeric characters EXCEPT the negative sign
+        // This handles "5.875.000", "5,875,000", and "Rp 5.875.000"
+        return parseFloat(s.replace(/[^\d-]/g, "")) || 0;
+      };
+
+      if (p.jenis.toLowerCase().includes('pendaftaran')) {
+        dibayar = cleanNum(currentUserData.bayarArafah);
+      } else if (p.jenis.toLowerCase().includes('dam') || p.jenis.toLowerCase().includes('tarwiyah')) {
+        dibayar = cleanNum(currentUserData.bayarLainnya);
+      }
+      return { ...p, dibayar };
+    });
+  }, [content?.pembayaran, currentUserData]);
 
   const searchResults = useMemo(() => {
     if (searchQuery.length < 2) return [];
@@ -973,7 +997,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
             <>
               <ViewHeader title="Informasi Keuangan" icon={<Banknote className="w-5 h-5" />} />
               <div className="space-y-4">
-                {content?.pembayaran.map((p, i) => (
+                {userPayments.map((p, i) => (
                   <div key={i} className="bg-white p-6 rounded-[32px] border border-neutral-100 shadow-sm space-y-4 overflow-hidden relative">
                     <div className="flex items-center justify-between">
                       <h4 className="text-[11px] font-black text-neutral-800 uppercase tracking-widest bg-neutral-50 px-3 py-1 rounded-lg">{p.jenis}</h4>
@@ -1825,7 +1849,7 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
               </div>
             </div>
             <div className="p-5 space-y-3">
-              {content?.pembayaran.map((p, i) => (
+              {userPayments.map((p, i) => (
                 <div key={i} className="bg-neutral-50/50 border border-neutral-100 rounded-3xl p-5 space-y-3 relative overflow-hidden group">
                   <div className="flex items-center justify-between">
                     <h3 className="text-[11px] font-black text-neutral-800 uppercase tracking-tight">{p.jenis}</h3>
