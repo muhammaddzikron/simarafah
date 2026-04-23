@@ -1416,6 +1416,26 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                     </div>
                   </div>
                 )}
+                {/* Hotel di Mekah Link */}
+                <div className="pt-4">
+                  <a 
+                    href="https://www.google.com/maps/d/u/0/viewer?mid=1QofzxxjtS3BAP1GtxHP7jwsCwOR94L8&ll=21.435720409243622%2C39.85358465998839&z=16" 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="flex items-center justify-between p-5 bg-blue-50 border border-blue-100 rounded-[30px] shadow-sm group transition-all active:scale-95"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-100">
+                        <MapIcon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h5 className="text-[13px] font-black text-blue-900 uppercase tracking-tight">Hotel di Mekah</h5>
+                        <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Klik untuk lihat lokasi</p>
+                      </div>
+                    </div>
+                    <ExternalLink className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-transform" />
+                  </a>
+                </div>
               </div>
             </>
           )}
