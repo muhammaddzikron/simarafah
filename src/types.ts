@@ -34,6 +34,8 @@ export interface Jemaah {
   waPetugas?: string;
   bayarArafah?: string;
   bayarLainnya?: string;
+  tendaMina?: string;
+  busShalawat?: string;
   paspor?: string;
   visa?: string;
 }

@@ -627,6 +627,15 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                     </div>
                   </div>
 
+                  {/* Akomodasi Mina & Transportasi */}
+                  <div className="p-6 space-y-5">
+                    <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">Akomodasi & Transportasi</h4>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                      <DataItem label="Tenda Mina (AJ)" value={currentUserData.tendaMina} />
+                      <DataItem label="Bus Shalawat (AK)" value={currentUserData.busShalawat} />
+                    </div>
+                  </div>
+
                   {/* Pendamping Lansia */}
                   {currentUserData.pendampingLansia && (
                     <div className="p-6 bg-indigo-50/30">
@@ -1731,6 +1740,18 @@ export default function Home({ user, onLogout }: { user: User | null, onLogout?:
                               <MapIcon className="w-4 h-4" /> Buka Penunjuk Peta (AI)
                             </a>
                           )}
+                        </div>
+                      </div>
+
+                      {/* Section 10: Fasilitas Tambahan */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-rose-50 border border-rose-100 rounded-3xl p-5 space-y-2">
+                           <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-1 italic">Tenda Mina (AJ)</p>
+                           <p className="text-sm font-black text-neutral-800 uppercase tracking-tight">{j.tendaMina || '-'}</p>
+                        </div>
+                        <div className="bg-sky-50 border border-sky-100 rounded-3xl p-5 space-y-2">
+                           <p className="text-[9px] font-black text-sky-500 uppercase tracking-widest mb-1 italic">Bus Shalawat (AK)</p>
+                           <p className="text-sm font-black text-neutral-800 uppercase tracking-tight">{j.busShalawat || '-'}</p>
                         </div>
                       </div>
                     </div>
